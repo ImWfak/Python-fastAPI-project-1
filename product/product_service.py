@@ -1,12 +1,19 @@
 from product.product_schemas import *
 from product.product_model import ProductModel
+from common.exception_schema import ExceptionSchema
+from common.exeption_source_enum import ExceptionSourceEnum
 
 
 async def get_product_by_id_or_raise_service(id: int) -> ProductModel:
     founded_product: ProductModel | None = await ProductModel.get_or_none(id=id)
 
     if not founded_product:
-        raise Exception(f"Product with id {id} not found")
+        raise Exception(
+            ExceptionSchema(
+                message="Product with id {id} not found",
+                exception_source=ExceptionSourceEnum.PRODUCT_SERVICE
+            )
+        )
 
     return founded_product
 
@@ -24,7 +31,7 @@ async def get_product_by_id_service(id: int) -> ProductModel:
 
 
 async def create_product_service(create_product_schema: CreateProductSchema) -> ProductModel:
-    return await ProductModel(**create_product_schema.model_dump())
+    return await ProductModel.create(**create_product_schema.model_dump())
 
 
 async def update_product_service(id: int, update_product_schema: UpdateProductSchema) -> ProductModel:
