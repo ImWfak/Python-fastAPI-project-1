@@ -35,13 +35,14 @@ async def create_product_service(create_product_schema: CreateProductSchema) -> 
 
 
 async def update_product_service(id: int, update_product_schema: UpdateProductSchema) -> ProductModel:
-    update_data = update_product_schema.model_dump(exclude_unset=True)
+    update_data: dict = update_product_schema.model_dump(exclude_unset=True)
 
     product_for_update: ProductModel = await get_product_by_id_or_raise_service(id)
 
-    await product_for_update.save(**update_data)
-    return await ProductModel.get(id=id)
+    await product_for_update.update_from_dict(update_data)
+    await product_for_update.save()
 
+    return await product_for_update
 
 async def delete_product_service(id: int) -> None:
     product_for_delete: ProductModel = await get_product_by_id_or_raise_service(id)
