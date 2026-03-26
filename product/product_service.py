@@ -1,6 +1,11 @@
-from product.product_schemas import *
+from http import HTTPStatus
+
+from product.product_schemas import (
+    CreateProductSchema,
+    UpdateProductSchema
+)
 from product.product_model import ProductModel
-from common.exception_schema import ExceptionSchema
+from common.app_exception import AppException
 from common.exeption_source_enum import ExceptionSourceEnum
 
 
@@ -8,11 +13,10 @@ async def get_product_by_id_or_raise_service(id: int) -> ProductModel:
     founded_product: ProductModel | None = await ProductModel.get_or_none(id=id)
 
     if not founded_product:
-        raise Exception(
-            ExceptionSchema(
-                message="Product with id {id} not found",
-                exception_source=ExceptionSourceEnum.PRODUCT_SERVICE
-            )
+        raise AppException(
+            message=f"Product with id {id} not found",
+            exception_source=ExceptionSourceEnum.PRODUCT_SERVICE,
+            http_status_code=HTTPStatus.NOT_FOUND
         )
 
     return founded_product
@@ -43,6 +47,7 @@ async def update_product_service(id: int, update_product_schema: UpdateProductSc
     await product_for_update.save()
 
     return await product_for_update
+
 
 async def delete_product_service(id: int) -> None:
     product_for_delete: ProductModel = await get_product_by_id_or_raise_service(id)

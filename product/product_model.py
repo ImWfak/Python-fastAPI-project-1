@@ -23,4 +23,3 @@ class ProductModel(
 
     class Meta:
         table = "products"
-
