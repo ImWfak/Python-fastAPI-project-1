@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 
 from product.product_model import ProductModel
-from product.product_schemas import (
+from product.product_schema import (
     GetProductSchema,
     CreateProductSchema,
     UpdateProductSchema

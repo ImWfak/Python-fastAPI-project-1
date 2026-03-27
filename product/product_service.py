@@ -1,6 +1,6 @@
 from http import HTTPStatus
 
-from product.product_schemas import (
+from product.product_schema import (
     CreateProductSchema,
     UpdateProductSchema
 )
