@@ -1,3 +1,13 @@
+#IDE
 .idea
+
+#ENV
 *.env
+
+#Cahse
 *.py[cod]
+
+#.test/pytest_cache
+#.pytest_cache
+#.venv
+# have own .gitignore files, which exclude all files in them

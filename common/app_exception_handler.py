@@ -8,7 +8,7 @@ async def app_exception_handler(request: Request, app_exception: AppException) -
     return JSONResponse(
         status_code=app_exception.http_status_code,
         content={
-            "message": "app_exception.message",
+            "message": app_exception.message,
             "exception_source": app_exception.exception_source
         }
     )

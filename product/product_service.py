@@ -4,22 +4,22 @@ from product.product_schema import (
     CreateProductSchema,
     UpdateProductSchema
 )
-from product.product_model import ProductModel
 from common.app_exception import AppException
+from product.product_model import ProductModel
 from common.exeption_source_enum import ExceptionSourceEnum
 
 
 async def get_product_by_id_or_raise_service(id: int) -> ProductModel:
-    founded_product: ProductModel | None = await ProductModel.get_or_none(id=id)
+    found_product: ProductModel | None = await ProductModel.get_or_none(id=id)
 
-    if not founded_product:
+    if not found_product:
         raise AppException(
             message=f"Product with id {id} not found",
             exception_source=ExceptionSourceEnum.PRODUCT_SERVICE,
             http_status_code=HTTPStatus.NOT_FOUND
         )
 
-    return founded_product
+    return found_product
 
 
 async def get_all_products_service() -> list[ProductModel]:
