@@ -2,6 +2,7 @@ import pytest
 from http import HTTPStatus
 from decimal import Decimal
 from pydantic import ValidationError
+from _pytest._code import ExceptionInfo
 
 from product.product_schema import (
     CreateProductSchema,
@@ -36,6 +37,18 @@ async def standard_product_test(product: ProductModel) -> None:
     assert product.name == STANDARD_NAME
     assert product.price_in_cents == STANDARD_PRICE_IN_CENTS
 
+
+async def standard_app_exception_not_found_test(
+        searchable_product_id: int,
+        app_exception: ExceptionInfo[AppException]
+) -> None:
+    app_exception_value = app_exception.value
+    assert app_exception_value.message == f"Product with id {searchable_product_id} not found"
+    assert app_exception_value.exception_source == ExceptionSourceEnum.PRODUCT_SERVICE
+    assert app_exception_value.http_status_code == HTTPStatus.NOT_FOUND
+
+
+###################################################################################################
 
 async def test_1_get_all_products_service() -> None:
     """TEST OF GETTING LIST FROM EMPTY PRODUCT TABLE"""
@@ -96,10 +109,7 @@ async def test_1_get_product_by_id_service() -> None:
     with pytest.raises(AppException) as app_exception:
         await get_product_by_id_service(id)
 
-    app_exception_value = app_exception.value
-    assert app_exception_value.message == f"Product with id {id} not found"
-    assert app_exception_value.exception_source == ExceptionSourceEnum.PRODUCT_SERVICE
-    assert app_exception_value.http_status_code == HTTPStatus.NOT_FOUND
+    await standard_app_exception_not_found_test(id, app_exception)
 
 
 async def test_2_get_product_by_id_service() -> None:
@@ -126,24 +136,119 @@ async def test_1_create_product_service() -> None:
 
 
 async def test_2_create_product_service() -> None:
+    """TEST OF CREATING PRODUCT WITH WRONG NAME"""
     with pytest.raises(
             ValidationError,
-            match="^1 validation error for CreateProductSchema\\nname\\n\s+Input should be a valid string \[type=string_type, input_value=1, input_type=int\]\\n\s+For further information visit https://errors\.pydantic\.dev/2\.12/v/string_type$"
-    ) as validation_exception:
+            match="^1 validation error for CreateProductSchema\nname\\n\\s+Input should be a valid string "
+                  + "\\[type=string_type, input_value=1, input_type=int\\]\\n\\s+For further information visit "
+                  + "https://errors\\.pydantic\\.dev/2\\.12/v/string_type$"
+    ):
         create_product_schema: CreateProductSchema = CreateProductSchema(
             name=1,
             price_in_cents=STANDARD_PRICE_IN_CENTS
         )
-        created_product: ProductModel = await create_product_service(create_product_schema)
+
+        await create_product_service(create_product_schema)
 
 
 async def test_3_create_product_service() -> None:
+    """TEST OF CREATING PRODUCT WITH WRONG PRICE_IN_CENTS"""
     with pytest.raises(
             ValidationError,
-            match="^1 validation error for CreateProductSchema\nprice_in_cents\n\s+Input should be a valid decimal \[type=decimal_parsing, input_value='', input_type=str\]\n\s+For further information visit https://errors\.pydantic\.dev/2\.12/v/decimal_parsing$"
-    ) as validation_exception:
+            match="^1 validation error for CreateProductSchema\nprice_in_cents\n\\s+Input should be a valid decimal "
+                  + "\\[type=decimal_parsing, input_value='', input_type=str\\]\n\\s+For further information visit "
+                  + "https://errors\\.pydantic\\.dev/2\\.12/v/decimal_parsing$"
+    ):
         create_product_schema: CreateProductSchema = CreateProductSchema(
             name=STANDARD_NAME,
             price_in_cents=""
         )
-        created_product: ProductModel = await create_product_service(create_product_schema)
+
+        await create_product_service(create_product_schema)
+
+
+async def test_1_update_product_service() -> None:
+    """TEST OF UPDATING NOT EXISTING PRODUCT"""
+    id = 0
+    update_product_schema: UpdateProductSchema = UpdateProductSchema(
+        name=STANDARD_NAME,
+        price_in_cents=STANDARD_PRICE_IN_CENTS
+    )
+
+    with pytest.raises(AppException) as app_exception:
+        await update_product_service(id, update_product_schema)
+
+    await standard_app_exception_not_found_test(id, app_exception)
+
+
+async def test_2_update_product_service() -> None:
+    """TEST OF UPDATING PRODUCT WITH WRONG NAME"""
+    created_product: ProductModel = await create_standard_product()
+
+    with pytest.raises(
+            ValidationError,
+            match="^1 validation error for UpdateProductSchema\nname\n\\s+Input should be a valid string "
+                  + "\\[type=string_type, input_value=\\d+, input_type=int\\]\n\\s+For further information visit "
+                  + "https:\\/\\/errors\\.pydantic\\.dev\\/2\\.12\\/v\\/string_type$"
+    ):
+        update_product_schema: UpdateProductSchema = UpdateProductSchema(
+            name=1,
+            price_in_cents=STANDARD_PRICE_IN_CENTS
+        )
+
+        await update_product_service(created_product.id, update_product_schema)
+
+
+async def test_3_update_product_service() -> None:
+    """TEST OF UPDATING PRODUCT WITH WRONG PRICE_IN_CENTS"""
+    created_product: ProductModel = await create_standard_product()
+
+    with pytest.raises(
+            ValidationError,
+            match="^1 validation error for UpdateProductSchema\nprice_in_cents\n\\s+Input should be a valid decimal "
+                  + "\\[type=decimal_parsing, input_value='', input_type=str\\]\n\\s+For further information visit "
+                  + "https:\\/\\/errors\\.pydantic\\.dev\\/2\\.12\\/v\\/decimal_parsing$"
+    ):
+        update_product_schema: UpdateProductSchema = UpdateProductSchema(
+            name=STANDARD_NAME,
+            price_in_cents=""
+        )
+
+        await update_product_service(created_product.id, update_product_schema)
+
+
+async def test_4_update_product_service() -> None:
+    """TEST OF UPDATING PRODUCT"""
+    created_product: ProductModel = await create_standard_product()
+
+    update_product_schema: UpdateProductSchema = UpdateProductSchema(
+        name=STANDARD_NAME + "_updated",
+        price_in_cents=STANDARD_PRICE_IN_CENTS + Decimal(10)
+    )
+
+    updated_product: ProductModel = await update_product_service(created_product.id, update_product_schema)
+
+    assert updated_product.name == STANDARD_NAME + "_updated"
+    assert updated_product.price_in_cents == STANDARD_PRICE_IN_CENTS + Decimal(10)
+
+
+async def test_1_delete_product_service() -> None:
+    """TEST OF DELETING NOT EXISTING PRODUCT"""
+    id = 0
+
+    with pytest.raises(AppException) as app_exception:
+        await delete_product_service(id)
+
+    await standard_app_exception_not_found_test(id, app_exception)
+
+
+async def test_2_delete_product_service() -> None:
+    """TEST OF DELETING PRODUCT"""
+    created_product: ProductModel = await create_standard_product()
+
+    await delete_product_service(created_product.id)
+
+    with pytest.raises(AppException) as app_exception:
+        await get_product_by_id_service(created_product.id)
+
+    await standard_app_exception_not_found_test(created_product.id, app_exception)
