@@ -1,8 +1,13 @@
-import pytest
 from decimal import Decimal
+
+import pytest
 from pydantic import ValidationError
 
 from common.app_exception import AppException
+from conftest import (
+    STANDARD_NAME,
+    STANDARD_PRICE_IN_CENTS
+)
 from product.conftest import (
     assert_standard_product,
     assert_product_not_found
@@ -20,9 +25,6 @@ from product.product_service import (
     update_product_service,
     delete_product_service
 )
-
-STANDARD_NAME = "test name"
-STANDARD_PRICE_IN_CENTS = Decimal(0)
 
 pytestmark = pytest.mark.asyncio
 
@@ -57,8 +59,8 @@ async def test_1_get_some_products_service() -> None:
 
     :raises AssertionError: If the returned list is not empty.
     """
-    all_products: list[ProductModel] = await get_some_products_service(0, 0)
-    assert all_products.__len__() == 0
+    some_products: list[ProductModel] = await get_some_products_service(0, 0)
+    assert some_products.__len__() == 0
 
 
 async def test_2_get_some_products_service() -> None:
@@ -72,8 +74,8 @@ async def test_2_get_some_products_service() -> None:
     record_with_max_id = await ProductModel.all().order_by('-id').first()
     max_id = record_with_max_id.id if record_with_max_id else 2_147_483_647
 
-    all_products: list[ProductModel] = await get_some_products_service(0, max_id)
-    assert all_products.__len__() == 0
+    some_products: list[ProductModel] = await get_some_products_service(0, max_id)
+    assert some_products.__len__() == 0
 
 
 async def test_3_get_some_products_service(standard_product: ProductModel) -> None:
@@ -84,8 +86,8 @@ async def test_3_get_some_products_service(standard_product: ProductModel) -> No
 
     :raises AssertionError: If the returned list is not empty.
     """
-    all_products: list[ProductModel] = await get_some_products_service(0, 0)
-    assert all_products.__len__() == 0
+    some_products: list[ProductModel] = await get_some_products_service(0, 0)
+    assert some_products.__len__() == 0
 
 
 async def test_4_get_some_products_service(standard_product: ProductModel) -> None:
@@ -95,13 +97,13 @@ async def test_4_get_some_products_service(standard_product: ProductModel) -> No
 
     :raises AssertionError: If the list length is not 1 or the product data is unexpected.
     """
-    all_products: list[ProductModel] = await get_some_products_service(
+    some_products: list[ProductModel] = await get_some_products_service(
         standard_product.id,
         standard_product.id + 1
     )
 
-    assert all_products.__len__() == 1
-    await assert_standard_product(all_products[0])
+    assert some_products.__len__() == 1
+    await assert_standard_product(some_products[0])
 
 
 async def test_1_get_product_by_id_service() -> None:
@@ -264,15 +266,18 @@ async def test_4_update_product_service(standard_product: ProductModel) -> None:
 
     :raises AssertionError: If the updated product fields do not reflect the new values.
     """
+    update_name = STANDARD_NAME + "_updated"
+    update_price_in_cents = STANDARD_PRICE_IN_CENTS + Decimal(10)
+
     update_product_schema: UpdateProductSchema = UpdateProductSchema(
-        name=STANDARD_NAME + "_updated",
-        price_in_cents=STANDARD_PRICE_IN_CENTS + Decimal(10)
+        name=update_name,
+        price_in_cents=update_price_in_cents
     )
 
     updated_product: ProductModel = await update_product_service(standard_product.id, update_product_schema)
 
-    assert updated_product.name == STANDARD_NAME + "_updated"
-    assert updated_product.price_in_cents == STANDARD_PRICE_IN_CENTS + Decimal(10)
+    assert updated_product.name == update_name
+    assert updated_product.price_in_cents == update_price_in_cents
 
 
 async def test_1_delete_product_service() -> None:

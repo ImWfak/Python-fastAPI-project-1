@@ -1,7 +1,11 @@
 import os
+
 import pytest_asyncio
-from tortoise import Tortoise
 from dotenv import load_dotenv
+from httpx import AsyncClient, ASGITransport
+from tortoise import Tortoise
+
+from main import app
 
 load_dotenv(".test.env")
 
@@ -38,3 +42,12 @@ async def db():
         """
     )
     await Tortoise.close_connections()
+
+
+@pytest_asyncio.fixture()
+async def async_client():
+    async with AsyncClient(
+            transport=ASGITransport(app=app),
+            base_url="http://localhost:8080"
+    ) as async_client:
+        yield async_client
