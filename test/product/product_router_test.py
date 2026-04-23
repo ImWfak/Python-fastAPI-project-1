@@ -6,11 +6,12 @@ from httpx import AsyncClient
 
 from conftest import (
     STANDARD_NAME,
-    STANDARD_PRICE_IN_CENTS
+    NONEXISTENT_ID,
+    STANDARD_PRICE_IN_CENTS,
 )
 from product.conftest import (
     assert_standard_product_from_dict,
-    assert_product_not_found_from_dict
+    assert_product_not_found_from_dict,
 )
 from product.product_model import ProductModel
 
@@ -24,15 +25,14 @@ async def test_1_get_all_products_router(async_client: AsyncClient) -> None:
     :raises AssertionError: If the status code or response body are unexpected.
     """
     response = await async_client.get(url="/product/")
-    all_products = response.json()
 
     assert response.status_code == HTTPStatus.OK
-    assert all_products.__len__() == 0
+    assert len(response.json()) == 0
 
 
 async def test_2_get_all_products_router(
         async_client: AsyncClient,
-        standard_product: ProductModel
+        standard_product: ProductModel,
 ) -> None:
     """
     Verifies that ``GET /product/`` returns ``200 OK`` and exactly one product after a single
@@ -44,8 +44,8 @@ async def test_2_get_all_products_router(
     all_products = response.json()
 
     assert response.status_code == HTTPStatus.OK
-    assert all_products.__len__() == 1
-    await assert_standard_product_from_dict(all_products[0])
+    assert len(all_products) == 1
+    assert_standard_product_from_dict(all_products[0])
 
 
 async def test_1_get_some_products_router(async_client: AsyncClient) -> None:
@@ -55,14 +55,10 @@ async def test_1_get_some_products_router(async_client: AsyncClient) -> None:
 
     :raises AssertionError: If the status code or response body are unexpected.
     """
-    response = await async_client.get(
-        url="/product/some",
-        params={"begin": 0, "end": 0}
-    )
-    some_products = response.json()
+    response = await async_client.get(url="/product/some", params={"begin": 0, "end": 0})
 
     assert response.status_code == HTTPStatus.OK
-    assert some_products.__len__() == 0
+    assert len(response.json()) == 0
 
 
 async def test_2_get_some_products_router(async_client: AsyncClient) -> None:
@@ -73,22 +69,18 @@ async def test_2_get_some_products_router(async_client: AsyncClient) -> None:
 
     :raises AssertionError: If the status code or response body are unexpected.
     """
-    record_with_max_id = await ProductModel.all().order_by('-id').first()
+    record_with_max_id = await ProductModel.all().order_by("-id").first()
     max_id = record_with_max_id.id if record_with_max_id else 2_147_483_647
 
-    response = await async_client.get(
-        url="/product/some",
-        params={"begin": 0, "end": max_id}
-    )
-    some_products = response.json()
+    response = await async_client.get(url="/product/some", params={"begin": 0, "end": max_id})
 
     assert response.status_code == HTTPStatus.OK
-    assert some_products.__len__() == 0
+    assert len(response.json()) == 0
 
 
 async def test_3_get_some_products_router(
         async_client: AsyncClient,
-        standard_product: ProductModel
+        standard_product: ProductModel,
 ) -> None:
     """
     Verifies that ``GET /product/some`` returns ``200 OK`` and an empty list when the range
@@ -97,19 +89,15 @@ async def test_3_get_some_products_router(
 
     :raises AssertionError: If the status code or response body are unexpected.
     """
-    response = await async_client.get(
-        url="/product/some",
-        params={"begin": 0, "end": 0}
-    )
-    some_products = response.json()
+    response = await async_client.get(url="/product/some", params={"begin": 0, "end": 0})
 
     assert response.status_code == HTTPStatus.OK
-    assert some_products.__len__() == 0
+    assert len(response.json()) == 0
 
 
 async def test_4_get_some_products_router(
         async_client: AsyncClient,
-        standard_product: ProductModel
+        standard_product: ProductModel,
 ) -> None:
     """
     Verifies that ``GET /product/some`` returns ``200 OK`` and exactly the created product
@@ -119,13 +107,13 @@ async def test_4_get_some_products_router(
     """
     response = await async_client.get(
         url="/product/some",
-        params={"begin": standard_product.id, "end": standard_product.id + 1}
+        params={"begin": standard_product.id, "end": standard_product.id + 1},
     )
     some_products = response.json()
 
     assert response.status_code == HTTPStatus.OK
-    assert some_products.__len__() == 1
-    await assert_standard_product_from_dict(some_products[0])
+    assert len(some_products) == 1
+    assert_standard_product_from_dict(some_products[0])
 
 
 async def test_1_get_product_by_id_router(async_client: AsyncClient) -> None:
@@ -135,17 +123,15 @@ async def test_1_get_product_by_id_router(async_client: AsyncClient) -> None:
 
     :raises AssertionError: If the status code or error payload are unexpected.
     """
-    id = 0
-    response = await async_client.get(url=f"/product/{id}")
-    error_message = response.json()
+    response = await async_client.get(url=f"/product/{NONEXISTENT_ID}")
 
     assert response.status_code == HTTPStatus.NOT_FOUND
-    await assert_product_not_found_from_dict(id, error_message)
+    assert_product_not_found_from_dict(NONEXISTENT_ID, response.json())
 
 
 async def test_2_get_product_by_id_router(
         async_client: AsyncClient,
-        standard_product: ProductModel
+        standard_product: ProductModel,
 ) -> None:
     """
     Verifies that ``GET /product/{id}`` returns ``200 OK`` and a product matching the
@@ -154,10 +140,9 @@ async def test_2_get_product_by_id_router(
     :raises AssertionError: If the status code or product data are unexpected.
     """
     response = await async_client.get(url=f"/product/{standard_product.id}")
-    product = response.json()
 
     assert response.status_code == HTTPStatus.OK
-    await assert_standard_product_from_dict(product)
+    assert_standard_product_from_dict(response.json())
 
 
 async def test_1_create_product_router(async_client: AsyncClient) -> None:
@@ -169,12 +154,11 @@ async def test_1_create_product_router(async_client: AsyncClient) -> None:
     """
     response = await async_client.post(
         url="/product/",
-        json={"name": STANDARD_NAME, "price_in_cents": str(STANDARD_PRICE_IN_CENTS)}
+        json={"name": STANDARD_NAME, "price_in_cents": str(STANDARD_PRICE_IN_CENTS)},
     )
-    product = response.json()
 
     assert response.status_code == HTTPStatus.OK
-    await assert_standard_product_from_dict(product)
+    assert_standard_product_from_dict(response.json())
 
 
 async def test_2_create_product_router(async_client: AsyncClient) -> None:
@@ -187,15 +171,15 @@ async def test_2_create_product_router(async_client: AsyncClient) -> None:
     wrong_name = 1
     response = await async_client.post(
         url="/product/",
-        json={"name": wrong_name, "price_in_cents": str(STANDARD_PRICE_IN_CENTS)}
+        json={"name": wrong_name, "price_in_cents": str(STANDARD_PRICE_IN_CENTS)},
     )
-    error_message = response.json().get("detail")[0]
+    error = response.json()["detail"][0]
 
     assert response.status_code == HTTPStatus.UNPROCESSABLE_CONTENT
-    assert error_message.get("type") == "string_type"
-    assert error_message.get("loc") == ["body", "name"]
-    assert error_message.get("msg") == "Input should be a valid string"
-    assert error_message.get("input") == wrong_name
+    assert error["type"] == "string_type"
+    assert error["loc"] == ["body", "name"]
+    assert error["msg"] == "Input should be a valid string"
+    assert error["input"] == wrong_name
 
 
 async def test_3_create_product_router(async_client: AsyncClient) -> None:
@@ -208,15 +192,15 @@ async def test_3_create_product_router(async_client: AsyncClient) -> None:
     wrong_price_in_cents = ""
     response = await async_client.post(
         url="/product/",
-        json={"name": STANDARD_NAME, "price_in_cents": wrong_price_in_cents}
+        json={"name": STANDARD_NAME, "price_in_cents": wrong_price_in_cents},
     )
-    error_message = response.json().get("detail")[0]
+    error = response.json()["detail"][0]
 
     assert response.status_code == HTTPStatus.UNPROCESSABLE_CONTENT
-    assert error_message.get("type") == "decimal_parsing"
-    assert error_message.get("loc") == ["body", "price_in_cents"]
-    assert error_message.get("msg") == "Input should be a valid decimal"
-    assert error_message.get("input") == wrong_price_in_cents
+    assert error["type"] == "decimal_parsing"
+    assert error["loc"] == ["body", "price_in_cents"]
+    assert error["msg"] == "Input should be a valid decimal"
+    assert error["input"] == wrong_price_in_cents
 
 
 async def test_1_update_product_router(async_client: AsyncClient) -> None:
@@ -226,20 +210,18 @@ async def test_1_update_product_router(async_client: AsyncClient) -> None:
 
     :raises AssertionError: If the status code or error payload are unexpected.
     """
-    id = 0
     response = await async_client.patch(
-        url=f"/product/{id}",
-        json={"name": STANDARD_NAME, "price_in_cents": str(STANDARD_PRICE_IN_CENTS)}
+        url=f"/product/{NONEXISTENT_ID}",
+        json={"name": STANDARD_NAME, "price_in_cents": str(STANDARD_PRICE_IN_CENTS)},
     )
-    error_message = response.json()
 
     assert response.status_code == HTTPStatus.NOT_FOUND
-    await assert_product_not_found_from_dict(id, error_message)
+    assert_product_not_found_from_dict(NONEXISTENT_ID, response.json())
 
 
 async def test_2_update_product_router(
         async_client: AsyncClient,
-        standard_product: ProductModel
+        standard_product: ProductModel,
 ) -> None:
     """
     Verifies that ``PATCH /product/{id}`` returns ``422 UNPROCESSABLE_CONTENT`` with a
@@ -251,20 +233,20 @@ async def test_2_update_product_router(
     wrong_name = 1
     response = await async_client.patch(
         url=f"/product/{standard_product.id}",
-        json={"name": wrong_name, "price_in_cents": str(STANDARD_PRICE_IN_CENTS)}
+        json={"name": wrong_name, "price_in_cents": str(STANDARD_PRICE_IN_CENTS)},
     )
-    error_message = response.json().get("detail")[0]
+    error = response.json()["detail"][0]
 
     assert response.status_code == HTTPStatus.UNPROCESSABLE_CONTENT
-    assert error_message.get("type") == "string_type"
-    assert error_message.get("loc") == ["body", "name"]
-    assert error_message.get("msg") == "Input should be a valid string"
-    assert error_message.get("input") == wrong_name
+    assert error["type"] == "string_type"
+    assert error["loc"] == ["body", "name"]
+    assert error["msg"] == "Input should be a valid string"
+    assert error["input"] == wrong_name
 
 
 async def test_3_update_product_router(
         async_client: AsyncClient,
-        standard_product: ProductModel
+        standard_product: ProductModel,
 ) -> None:
     """
     Verifies that ``PATCH /product/{id}`` returns ``422 UNPROCESSABLE_CONTENT`` with a
@@ -276,20 +258,20 @@ async def test_3_update_product_router(
     wrong_price_in_cents = ""
     response = await async_client.patch(
         url=f"/product/{standard_product.id}",
-        json={"name": STANDARD_NAME, "price_in_cents": wrong_price_in_cents}
+        json={"name": STANDARD_NAME, "price_in_cents": wrong_price_in_cents},
     )
-    error_message = response.json().get("detail")[0]
+    error = response.json()["detail"][0]
 
     assert response.status_code == HTTPStatus.UNPROCESSABLE_CONTENT
-    assert error_message.get("type") == "decimal_parsing"
-    assert error_message.get("loc") == ["body", "price_in_cents"]
-    assert error_message.get("msg") == "Input should be a valid decimal"
-    assert error_message.get("input") == wrong_price_in_cents
+    assert error["type"] == "decimal_parsing"
+    assert error["loc"] == ["body", "price_in_cents"]
+    assert error["msg"] == "Input should be a valid decimal"
+    assert error["input"] == wrong_price_in_cents
 
 
 async def test_4_update_product_router(
         async_client: AsyncClient,
-        standard_product: ProductModel
+        standard_product: ProductModel,
 ) -> None:
     """
     Verifies that ``PATCH /product/{id}`` returns ``200 OK`` and correctly persists new
@@ -300,17 +282,17 @@ async def test_4_update_product_router(
 
     :raises AssertionError: If the status code or updated product fields are unexpected.
     """
-    update_name = STANDARD_NAME + "_updated"
-    update_price_in_cents = STANDARD_PRICE_IN_CENTS + Decimal(10)
+    updated_name = STANDARD_NAME + "_updated"
+    updated_price_in_cents = STANDARD_PRICE_IN_CENTS + Decimal("10")
     response = await async_client.patch(
         url=f"/product/{standard_product.id}",
-        json={"name": update_name, "price_in_cents": str(update_price_in_cents)}
+        json={"name": updated_name, "price_in_cents": str(updated_price_in_cents)},
     )
     updated_product = response.json()
 
     assert response.status_code == HTTPStatus.OK
-    assert updated_product.get("name") == update_name
-    assert Decimal(updated_product.get("price_in_cents")) == update_price_in_cents
+    assert updated_product["name"] == updated_name
+    assert Decimal(str(updated_product["price_in_cents"])) == updated_price_in_cents
 
 
 async def test_1_delete_product_router(async_client: AsyncClient) -> None:
@@ -320,17 +302,15 @@ async def test_1_delete_product_router(async_client: AsyncClient) -> None:
 
     :raises AssertionError: If the status code or error payload are unexpected.
     """
-    id = 0
-    response = await async_client.delete(url=f"/product/{id}")
-    error_message = response.json()
+    response = await async_client.delete(url=f"/product/{NONEXISTENT_ID}")
 
     assert response.status_code == HTTPStatus.NOT_FOUND
-    await assert_product_not_found_from_dict(id, error_message)
+    assert_product_not_found_from_dict(NONEXISTENT_ID, response.json())
 
 
 async def test_2_delete_product_router(
         async_client: AsyncClient,
-        standard_product: ProductModel
+        standard_product: ProductModel,
 ) -> None:
     """
     Verifies that ``DELETE /product/{id}`` returns ``204 NO_CONTENT`` after successfully

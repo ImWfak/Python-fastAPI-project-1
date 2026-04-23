@@ -8,8 +8,9 @@ from common.app_exception import AppException
 from common.exeption_source_enum import ExceptionSourceEnum
 from product.product_model import ProductModel
 
+NONEXISTENT_ID = 0
 STANDARD_NAME = "test name"
-STANDARD_PRICE_IN_CENTS = Decimal(0)
+STANDARD_PRICE_IN_CENTS = Decimal("0")
 
 
 @pytest_asyncio.fixture
@@ -21,11 +22,11 @@ async def standard_product() -> ProductModel:
     """
     return await ProductModel.create(
         name=STANDARD_NAME,
-        price_in_cents=STANDARD_PRICE_IN_CENTS
+        price_in_cents=STANDARD_PRICE_IN_CENTS,
     )
 
 
-async def assert_standard_product(product: ProductModel) -> None:
+def assert_standard_product(product: ProductModel) -> None:
     """
     Asserts that a product matches the standard test fixtures.
 
@@ -36,7 +37,7 @@ async def assert_standard_product(product: ProductModel) -> None:
     assert product.price_in_cents == STANDARD_PRICE_IN_CENTS
 
 
-async def assert_standard_product_from_dict(product_dict: dict) -> None:
+def assert_standard_product_from_dict(product_dict: dict) -> None:
     """
     Asserts that a product dictionary matches the standard test fixtures.
 
@@ -47,9 +48,9 @@ async def assert_standard_product_from_dict(product_dict: dict) -> None:
     assert Decimal(str(product_dict.get("price_in_cents"))) == STANDARD_PRICE_IN_CENTS
 
 
-async def assert_product_not_found(
+def assert_product_not_found(
         searchable_product_id: int,
-        app_exception: ExceptionInfo[AppException]
+        app_exception: ExceptionInfo[AppException],
 ) -> None:
     """
     Asserts that an :class:`AppException` carries the expected ``NOT_FOUND`` payload.
@@ -58,15 +59,15 @@ async def assert_product_not_found(
     :param app_exception: The captured pytest exception info wrapping the :class:`AppException`.
     :raises AssertionError: If the exception message, source, or HTTP status code are unexpected.
     """
-    app_exception_value = app_exception.value
-    assert app_exception_value.message == f"Product with id {searchable_product_id} not found"
-    assert app_exception_value.exception_source == ExceptionSourceEnum.PRODUCT_SERVICE
-    assert app_exception_value.http_status_code == HTTPStatus.NOT_FOUND
+    exc = app_exception.value
+    assert exc.message == f"Product with id {searchable_product_id} not found"
+    assert exc.exception_source == ExceptionSourceEnum.PRODUCT_SERVICE
+    assert exc.http_status_code == HTTPStatus.NOT_FOUND
 
 
-async def assert_product_not_found_from_dict(
+def assert_product_not_found_from_dict(
         searchable_product_id: int,
-        app_exception_from_dict: dict
+        app_exception_from_dict: dict,
 ) -> None:
     """
     Asserts that an exception dictionary carries the expected ``NOT_FOUND`` payload.

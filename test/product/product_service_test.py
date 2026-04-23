@@ -6,16 +6,17 @@ from pydantic import ValidationError
 from common.app_exception import AppException
 from conftest import (
     STANDARD_NAME,
-    STANDARD_PRICE_IN_CENTS
+    NONEXISTENT_ID,
+    STANDARD_PRICE_IN_CENTS,
 )
 from product.conftest import (
     assert_standard_product,
-    assert_product_not_found
+    assert_product_not_found,
 )
 from product.product_model import ProductModel
 from product.product_schema import (
     CreateProductSchema,
-    UpdateProductSchema
+    UpdateProductSchema,
 )
 from product.product_service import (
     get_all_products_service,
@@ -23,10 +24,22 @@ from product.product_service import (
     get_product_by_id_service,
     create_product_service,
     update_product_service,
-    delete_product_service
+    delete_product_service,
 )
 
 pytestmark = pytest.mark.asyncio
+
+_PYDANTIC_BASE_URL = r"https://errors\.pydantic\.dev/2\.12\/v"
+_STRING_TYPE_PATTERN = (
+        r"Input should be a valid string "
+        r"\[type=string_type, input_value=.+, input_type=int\]\n"
+        r"\s+For further information visit " + _PYDANTIC_BASE_URL + r"\/string_type"
+)
+_DECIMAL_PARSING_PATTERN = (
+        r"Input should be a valid decimal "
+        r"\[type=decimal_parsing, input_value='', input_type=str\]\n"
+        r"\s+For further information visit " + _PYDANTIC_BASE_URL + r"\/decimal_parsing"
+)
 
 
 async def test_1_get_all_products_service() -> None:
@@ -36,7 +49,7 @@ async def test_1_get_all_products_service() -> None:
     :raises AssertionError: If the returned list is not empty.
     """
     all_products: list[ProductModel] = await get_all_products_service()
-    assert all_products.__len__() == 0
+    assert len(all_products) == 0
 
 
 async def test_2_get_all_products_service(standard_product: ProductModel) -> None:
@@ -48,8 +61,8 @@ async def test_2_get_all_products_service(standard_product: ProductModel) -> Non
     """
     all_products: list[ProductModel] = await get_all_products_service()
 
-    assert all_products.__len__() == 1
-    await assert_standard_product(all_products[0])
+    assert len(all_products) == 1
+    assert_standard_product(all_products[0])
 
 
 async def test_1_get_some_products_service() -> None:
@@ -60,7 +73,7 @@ async def test_1_get_some_products_service() -> None:
     :raises AssertionError: If the returned list is not empty.
     """
     some_products: list[ProductModel] = await get_some_products_service(0, 0)
-    assert some_products.__len__() == 0
+    assert len(some_products) == 0
 
 
 async def test_2_get_some_products_service() -> None:
@@ -71,11 +84,11 @@ async def test_2_get_some_products_service() -> None:
 
     :raises AssertionError: If the returned list is not empty.
     """
-    record_with_max_id = await ProductModel.all().order_by('-id').first()
+    record_with_max_id = await ProductModel.all().order_by("-id").first()
     max_id = record_with_max_id.id if record_with_max_id else 2_147_483_647
 
     some_products: list[ProductModel] = await get_some_products_service(0, max_id)
-    assert some_products.__len__() == 0
+    assert len(some_products) == 0
 
 
 async def test_3_get_some_products_service(standard_product: ProductModel) -> None:
@@ -87,7 +100,7 @@ async def test_3_get_some_products_service(standard_product: ProductModel) -> No
     :raises AssertionError: If the returned list is not empty.
     """
     some_products: list[ProductModel] = await get_some_products_service(0, 0)
-    assert some_products.__len__() == 0
+    assert len(some_products) == 0
 
 
 async def test_4_get_some_products_service(standard_product: ProductModel) -> None:
@@ -99,11 +112,11 @@ async def test_4_get_some_products_service(standard_product: ProductModel) -> No
     """
     some_products: list[ProductModel] = await get_some_products_service(
         standard_product.id,
-        standard_product.id + 1
+        standard_product.id + 1,
     )
 
-    assert some_products.__len__() == 1
-    await assert_standard_product(some_products[0])
+    assert len(some_products) == 1
+    assert_standard_product(some_products[0])
 
 
 async def test_1_get_product_by_id_service() -> None:
@@ -113,12 +126,10 @@ async def test_1_get_product_by_id_service() -> None:
 
     :raises AssertionError: If no exception is raised or the exception payload is unexpected.
     """
-    id = 0
-
     with pytest.raises(AppException) as app_exception:
-        await get_product_by_id_service(id)
+        await get_product_by_id_service(NONEXISTENT_ID)
 
-    await assert_product_not_found(id, app_exception)
+    assert_product_not_found(NONEXISTENT_ID, app_exception)
 
 
 async def test_2_get_product_by_id_service(standard_product: ProductModel) -> None:
@@ -130,7 +141,7 @@ async def test_2_get_product_by_id_service(standard_product: ProductModel) -> No
     """
     found_product: ProductModel = await get_product_by_id_service(standard_product.id)
 
-    await assert_standard_product(found_product)
+    assert_standard_product(found_product)
 
 
 async def test_1_create_product_service() -> None:
@@ -140,14 +151,13 @@ async def test_1_create_product_service() -> None:
 
     :raises AssertionError: If the created product data is unexpected.
     """
-    create_product_schema: CreateProductSchema = CreateProductSchema(
+    create_product_schema = CreateProductSchema(
         name=STANDARD_NAME,
-        price_in_cents=STANDARD_PRICE_IN_CENTS
+        price_in_cents=STANDARD_PRICE_IN_CENTS,
     )
-
     created_product: ProductModel = await create_product_service(create_product_schema)
 
-    await assert_standard_product(created_product)
+    assert_standard_product(created_product)
 
 
 async def test_2_create_product_service() -> None:
@@ -159,16 +169,9 @@ async def test_2_create_product_service() -> None:
     """
     with pytest.raises(
             ValidationError,
-            match="^1 validation error for CreateProductSchema\nname\\n\\s+Input should be a valid string "
-                  + "\\[type=string_type, input_value=1, input_type=int\\]\\n\\s+For further information visit "
-                  + "https://errors\\.pydantic\\.dev/2\\.12/v/string_type$"
+            match=f"^1 validation error for CreateProductSchema\nname\n\\s+{_STRING_TYPE_PATTERN}$",
     ):
-        create_product_schema: CreateProductSchema = CreateProductSchema(
-            name=1,
-            price_in_cents=STANDARD_PRICE_IN_CENTS
-        )
-
-        await create_product_service(create_product_schema)
+        CreateProductSchema(name=1, price_in_cents=STANDARD_PRICE_IN_CENTS)
 
 
 async def test_3_create_product_service() -> None:
@@ -181,16 +184,9 @@ async def test_3_create_product_service() -> None:
     """
     with pytest.raises(
             ValidationError,
-            match="^1 validation error for CreateProductSchema\nprice_in_cents\n\\s+Input should be a valid decimal "
-                  + "\\[type=decimal_parsing, input_value='', input_type=str\\]\n\\s+For further information visit "
-                  + "https://errors\\.pydantic\\.dev/2\\.12/v/decimal_parsing$"
+            match=f"^1 validation error for CreateProductSchema\nprice_in_cents\n\\s+{_DECIMAL_PARSING_PATTERN}$",
     ):
-        create_product_schema: CreateProductSchema = CreateProductSchema(
-            name=STANDARD_NAME,
-            price_in_cents=""
-        )
-
-        await create_product_service(create_product_schema)
+        CreateProductSchema(name=STANDARD_NAME, price_in_cents="")
 
 
 async def test_1_update_product_service() -> None:
@@ -200,16 +196,15 @@ async def test_1_update_product_service() -> None:
 
     :raises AssertionError: If no exception is raised or the exception payload is unexpected.
     """
-    id = 0
-    update_product_schema: UpdateProductSchema = UpdateProductSchema(
+    update_product_schema = UpdateProductSchema(
         name=STANDARD_NAME,
-        price_in_cents=STANDARD_PRICE_IN_CENTS
+        price_in_cents=STANDARD_PRICE_IN_CENTS,
     )
 
     with pytest.raises(AppException) as app_exception:
-        await update_product_service(id, update_product_schema)
+        await update_product_service(NONEXISTENT_ID, update_product_schema)
 
-    await assert_product_not_found(id, app_exception)
+    assert_product_not_found(NONEXISTENT_ID, app_exception)
 
 
 async def test_2_update_product_service(standard_product: ProductModel) -> None:
@@ -222,16 +217,9 @@ async def test_2_update_product_service(standard_product: ProductModel) -> None:
     """
     with pytest.raises(
             ValidationError,
-            match="^1 validation error for UpdateProductSchema\nname\n\\s+Input should be a valid string "
-                  + "\\[type=string_type, input_value=\\d+, input_type=int\\]\n\\s+For further information visit "
-                  + "https:\\/\\/errors\\.pydantic\\.dev\\/2\\.12\\/v\\/string_type$"
+            match=f"^1 validation error for UpdateProductSchema\nname\n\\s+{_STRING_TYPE_PATTERN}$",
     ):
-        update_product_schema: UpdateProductSchema = UpdateProductSchema(
-            name=1,
-            price_in_cents=STANDARD_PRICE_IN_CENTS
-        )
-
-        await update_product_service(standard_product.id, update_product_schema)
+        UpdateProductSchema(name=1, price_in_cents=STANDARD_PRICE_IN_CENTS)
 
 
 async def test_3_update_product_service(standard_product: ProductModel) -> None:
@@ -244,16 +232,9 @@ async def test_3_update_product_service(standard_product: ProductModel) -> None:
     """
     with pytest.raises(
             ValidationError,
-            match="^1 validation error for UpdateProductSchema\nprice_in_cents\n\\s+Input should be a valid decimal "
-                  + "\\[type=decimal_parsing, input_value='', input_type=str\\]\n\\s+For further information visit "
-                  + "https:\\/\\/errors\\.pydantic\\.dev\\/2\\.12\\/v\\/decimal_parsing$"
+            match=f"^1 validation error for UpdateProductSchema\nprice_in_cents\n\\s+{_DECIMAL_PARSING_PATTERN}$",
     ):
-        update_product_schema: UpdateProductSchema = UpdateProductSchema(
-            name=STANDARD_NAME,
-            price_in_cents=""
-        )
-
-        await update_product_service(standard_product.id, update_product_schema)
+        UpdateProductSchema(name=STANDARD_NAME, price_in_cents="")
 
 
 async def test_4_update_product_service(standard_product: ProductModel) -> None:
@@ -266,18 +247,16 @@ async def test_4_update_product_service(standard_product: ProductModel) -> None:
 
     :raises AssertionError: If the updated product fields do not reflect the new values.
     """
-    update_name = STANDARD_NAME + "_updated"
-    update_price_in_cents = STANDARD_PRICE_IN_CENTS + Decimal(10)
-
-    update_product_schema: UpdateProductSchema = UpdateProductSchema(
-        name=update_name,
-        price_in_cents=update_price_in_cents
+    updated_name = STANDARD_NAME + "_updated"
+    updated_price_in_cents = STANDARD_PRICE_IN_CENTS + Decimal("10")
+    update_product_schema = UpdateProductSchema(
+        name=updated_name,
+        price_in_cents=updated_price_in_cents,
     )
-
     updated_product: ProductModel = await update_product_service(standard_product.id, update_product_schema)
 
-    assert updated_product.name == update_name
-    assert updated_product.price_in_cents == update_price_in_cents
+    assert updated_product.name == updated_name
+    assert updated_product.price_in_cents == updated_price_in_cents
 
 
 async def test_1_delete_product_service() -> None:
@@ -287,12 +266,10 @@ async def test_1_delete_product_service() -> None:
 
     :raises AssertionError: If no exception is raised or the exception payload is unexpected.
     """
-    id = 0
-
     with pytest.raises(AppException) as app_exception:
-        await delete_product_service(id)
+        await delete_product_service(NONEXISTENT_ID)
 
-    await assert_product_not_found(id, app_exception)
+    assert_product_not_found(NONEXISTENT_ID, app_exception)
 
 
 async def test_2_delete_product_service(standard_product: ProductModel) -> None:
@@ -309,4 +286,4 @@ async def test_2_delete_product_service(standard_product: ProductModel) -> None:
     with pytest.raises(AppException) as app_exception:
         await get_product_by_id_service(standard_product.id)
 
-    await assert_product_not_found(standard_product.id, app_exception)
+    assert_product_not_found(standard_product.id, app_exception)
