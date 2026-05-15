@@ -1,6 +1,6 @@
 from http import HTTPStatus
 
-from common.exeption_source_enum import ExceptionSourceEnum
+from exception.exeption_source_enum import ExceptionSourceEnum
 
 
 class AppException(Exception):

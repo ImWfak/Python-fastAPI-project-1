@@ -4,7 +4,7 @@ from product.product_model import ProductModel
 from product.product_schema import (
     CreateProductSchema,
     GetProductSchema,
-    UpdateProductSchema,
+    UpdateProductSchema
 )
 from product.product_service import (
     create_product_service,
@@ -12,7 +12,7 @@ from product.product_service import (
     get_all_products_service,
     get_product_by_id_service,
     get_some_products_service,
-    update_product_service,
+    update_product_service
 )
 
 product_router = APIRouter(

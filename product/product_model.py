@@ -1,6 +1,6 @@
 from tortoise import models, fields
 
-from common.timestamp_mixin import TimestampMixin
+from db.timestamp_mixin import TimestampMixin
 
 
 class ProductModel(

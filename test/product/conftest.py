@@ -4,8 +4,8 @@ from http import HTTPStatus
 import pytest_asyncio
 from _pytest._code import ExceptionInfo
 
-from common.app_exception import AppException
-from common.exeption_source_enum import ExceptionSourceEnum
+from exception.app_exception import AppException
+from exception.exeption_source_enum import ExceptionSourceEnum
 from product.product_model import ProductModel
 
 NONEXISTENT_ID = 0

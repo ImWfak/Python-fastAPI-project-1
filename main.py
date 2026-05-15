@@ -1,9 +1,9 @@
 from fastapi import FastAPI
 
 from db.connect_to_db import connect_to_db
-from common.app_exception import AppException
+from exception.app_exception import AppException
 from product.product_router import product_router
-from common.app_exception_handler import app_exception_handler
+from exception.app_exception_handler import app_exception_handler
 
 app = FastAPI()
 

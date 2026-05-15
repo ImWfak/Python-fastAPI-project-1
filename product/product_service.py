@@ -1,15 +1,15 @@
 from http import HTTPStatus
 
-from common.app_exception import AppException
-from common.exeption_source_enum import ExceptionSourceEnum
+from exception.app_exception import AppException
+from exception.exeption_source_enum import ExceptionSourceEnum
 from product.product_model import ProductModel
 from product.product_schema import (
     CreateProductSchema,
-    UpdateProductSchema,
+    UpdateProductSchema
 )
 
 
-async def get_product_by_id_or_raise_service(id: int) -> ProductModel:
+async def get_product_by_id(id: int) -> ProductModel:
     """
     Fetches a product by its primary key, raising an exception if it does not exist.
 
@@ -77,7 +77,7 @@ async def get_product_by_id_service(id: int) -> ProductModel:
     :raises AppException: With ``HTTP 404 NOT_FOUND`` if no product with the given
         ``id`` exists.
     """
-    return await get_product_by_id_or_raise_service(id)
+    return await get_product_by_id(id)
 
 
 async def create_product_service(create_product_schema: CreateProductSchema) -> ProductModel:
@@ -115,7 +115,7 @@ async def update_product_service(id: int, update_product_schema: UpdateProductSc
     """
     update_data: dict = update_product_schema.model_dump(exclude_unset=True)
 
-    product_for_update: ProductModel = await get_product_by_id_or_raise_service(id)
+    product_for_update: ProductModel = await get_product_by_id(id)
 
     await product_for_update.update_from_dict(update_data)
     await product_for_update.save()
@@ -135,6 +135,6 @@ async def delete_product_service(id: int) -> None:
     :raises AppException: With ``HTTP 404 NOT_FOUND`` if no product with the given
         ``id`` exists.
     """
-    product_for_delete: ProductModel = await get_product_by_id_or_raise_service(id)
+    product_for_delete: ProductModel = await get_product_by_id(id)
 
     await product_for_delete.delete()

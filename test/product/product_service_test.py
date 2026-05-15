@@ -3,7 +3,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from common.app_exception import AppException
+from exception.app_exception import AppException
 from conftest import (
     STANDARD_NAME,
     NONEXISTENT_ID,
