@@ -3,12 +3,12 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from exception.app_exception import AppException
 from conftest import (
     STANDARD_NAME,
     NONEXISTENT_ID,
     STANDARD_PRICE_IN_CENTS,
 )
+from exception.app_exception import AppException
 from product.conftest import (
     assert_standard_product,
     assert_product_not_found,
@@ -23,9 +23,10 @@ from product.product_service import (
     get_some_products_service,
     get_product_by_id_service,
     create_product_service,
-    update_product_service,
-    delete_product_service,
+    update_product_by_id_service,
+    delete_product_by_id_service,
 )
+from user.user_access_enum import UserAccessEnum
 
 pytestmark = pytest.mark.asyncio
 
@@ -39,6 +40,11 @@ _DECIMAL_PARSING_PATTERN = (
         r"Input should be a valid decimal "
         r"\[type=decimal_parsing, input_value='', input_type=str\]\n"
         r"\s+For further information visit " + _PYDANTIC_BASE_URL + r"\/decimal_parsing"
+)
+_ENUM_TYPE_PATTERN = (
+        r"Input should be 'HIGH', 'MIDDLE' or 'LOW' "
+        r"\[type=enum, input_value='', input_type=str]\n"
+        r"\s+For further information visit " + _PYDANTIC_BASE_URL + r"\/enum"
 )
 
 
@@ -154,6 +160,7 @@ async def test_1_create_product_service() -> None:
     create_product_schema = CreateProductSchema(
         name=STANDARD_NAME,
         price_in_cents=STANDARD_PRICE_IN_CENTS,
+        user_access=UserAccessEnum.HIGH
     )
     created_product: ProductModel = await create_product_service(create_product_schema)
 
@@ -171,7 +178,11 @@ async def test_2_create_product_service() -> None:
             ValidationError,
             match=f"^1 validation error for CreateProductSchema\nname\n\\s+{_STRING_TYPE_PATTERN}$",
     ):
-        CreateProductSchema(name=1, price_in_cents=STANDARD_PRICE_IN_CENTS)
+        CreateProductSchema(
+            name=1,
+            price_in_cents=STANDARD_PRICE_IN_CENTS,
+            user_access=UserAccessEnum.HIGH
+        )
 
 
 async def test_3_create_product_service() -> None:
@@ -186,12 +197,28 @@ async def test_3_create_product_service() -> None:
             ValidationError,
             match=f"^1 validation error for CreateProductSchema\nprice_in_cents\n\\s+{_DECIMAL_PARSING_PATTERN}$",
     ):
-        CreateProductSchema(name=STANDARD_NAME, price_in_cents="")
+        CreateProductSchema(
+            name=STANDARD_NAME,
+            price_in_cents="",
+            user_access=UserAccessEnum.HIGH
+        )
 
 
-async def test_1_update_product_service() -> None:
+async def test_4_create_product_service() -> None:
+    with pytest.raises(
+            ValidationError,
+            match=f"^1 validation error for CreateProductSchema\nuser_access\n\\s+{_ENUM_TYPE_PATTERN}"
+    ):
+        CreateProductSchema(
+            name=STANDARD_NAME,
+            price_in_cents=STANDARD_PRICE_IN_CENTS,
+            user_access=""
+        )
+
+
+async def test_1_update_product_by_id_service() -> None:
     """
-    Verifies that ``update_product_service`` raises :class:`AppException` with
+    Verifies that ``update_product_by_id_service`` raises :class:`AppException` with
     ``NOT_FOUND`` when attempting to update a product with ID ``0`` (non-existent).
 
     :raises AssertionError: If no exception is raised or the exception payload is unexpected.
@@ -199,15 +226,16 @@ async def test_1_update_product_service() -> None:
     update_product_schema = UpdateProductSchema(
         name=STANDARD_NAME,
         price_in_cents=STANDARD_PRICE_IN_CENTS,
+        user_access=UserAccessEnum.HIGH
     )
 
     with pytest.raises(AppException) as app_exception:
-        await update_product_service(NONEXISTENT_ID, update_product_schema)
+        await update_product_by_id_service(NONEXISTENT_ID, update_product_schema)
 
     assert_product_not_found(NONEXISTENT_ID, app_exception)
 
 
-async def test_2_update_product_service(standard_product: ProductModel) -> None:
+async def test_2_update_product_by_id_service(standard_product: ProductModel) -> None:
     """
     Verifies that constructing an :class:`UpdateProductSchema` with an integer ``name``
     raises a :class:`~pydantic.ValidationError` describing a ``string_type`` failure,
@@ -219,10 +247,14 @@ async def test_2_update_product_service(standard_product: ProductModel) -> None:
             ValidationError,
             match=f"^1 validation error for UpdateProductSchema\nname\n\\s+{_STRING_TYPE_PATTERN}$",
     ):
-        UpdateProductSchema(name=1, price_in_cents=STANDARD_PRICE_IN_CENTS)
+        UpdateProductSchema(
+            name=1,
+            price_in_cents=STANDARD_PRICE_IN_CENTS,
+            user_access=UserAccessEnum.HIGH
+        )
 
 
-async def test_3_update_product_service(standard_product: ProductModel) -> None:
+async def test_3_update_product_by_id_service(standard_product: ProductModel) -> None:
     """
     Verifies that constructing an :class:`UpdateProductSchema` with an empty string
     ``price_in_cents`` raises a :class:`~pydantic.ValidationError` describing a
@@ -234,12 +266,28 @@ async def test_3_update_product_service(standard_product: ProductModel) -> None:
             ValidationError,
             match=f"^1 validation error for UpdateProductSchema\nprice_in_cents\n\\s+{_DECIMAL_PARSING_PATTERN}$",
     ):
-        UpdateProductSchema(name=STANDARD_NAME, price_in_cents="")
+        UpdateProductSchema(
+            name=STANDARD_NAME,
+            price_in_cents="",
+            user_access=UserAccessEnum.HIGH
+        )
 
 
-async def test_4_update_product_service(standard_product: ProductModel) -> None:
+async def test_4_update_product_by_id_service(standard_product: ProductModel) -> None:
+    with pytest.raises(
+            ValidationError,
+            match=f"^1 validation error for UpdateProductSchema\nuser_access\n\\s+{_ENUM_TYPE_PATTERN}"
+    ):
+        UpdateProductSchema(
+            name=STANDARD_NAME,
+            price_in_cents=STANDARD_PRICE_IN_CENTS,
+            user_access=""
+        )
+
+
+async def test_5_update_product_by_id_service(standard_product: ProductModel) -> None:
     """
-    Verifies that ``update_product_service`` correctly persists new values when a valid
+    Verifies that ``update_product_by_id_service`` correctly persists new values when a valid
     :class:`UpdateProductSchema` is supplied for an existing product.
 
     The updated ``name`` should have the ``_updated`` suffix and ``price_in_cents``
@@ -249,39 +297,43 @@ async def test_4_update_product_service(standard_product: ProductModel) -> None:
     """
     updated_name = STANDARD_NAME + "_updated"
     updated_price_in_cents = STANDARD_PRICE_IN_CENTS + Decimal("10")
+    updated_user_access = UserAccessEnum.LOW
+
     update_product_schema = UpdateProductSchema(
         name=updated_name,
         price_in_cents=updated_price_in_cents,
+        user_access=updated_user_access
     )
-    updated_product: ProductModel = await update_product_service(standard_product.id, update_product_schema)
+    updated_product: ProductModel = await update_product_by_id_service(standard_product.id, update_product_schema)
 
     assert updated_product.name == updated_name
     assert updated_product.price_in_cents == updated_price_in_cents
+    assert updated_product.user_access == updated_user_access
 
 
-async def test_1_delete_product_service() -> None:
+async def test_1_delete_product_by_id_service() -> None:
     """
-    Verifies that ``delete_product_service`` raises :class:`AppException` with
+    Verifies that ``delete_product_by_id_service`` raises :class:`AppException` with
     ``NOT_FOUND`` when attempting to delete a product with ID ``0`` (non-existent).
 
     :raises AssertionError: If no exception is raised or the exception payload is unexpected.
     """
     with pytest.raises(AppException) as app_exception:
-        await delete_product_service(NONEXISTENT_ID)
+        await delete_product_by_id_service(NONEXISTENT_ID)
 
     assert_product_not_found(NONEXISTENT_ID, app_exception)
 
 
-async def test_2_delete_product_service(standard_product: ProductModel) -> None:
+async def test_2_delete_product_by_id_service(standard_product: ProductModel) -> None:
     """
-    Verifies the full delete lifecycle: after ``delete_product_service`` is called for an
+    Verifies the full delete lifecycle: after ``delete_product_by_id_service`` is called for an
     existing product, a subsequent ``get_product_by_id_service`` call for the same ID
     raises :class:`AppException` with ``NOT_FOUND``.
 
     :raises AssertionError: If the product is still retrievable after deletion, or the
         exception payload on the follow-up lookup is unexpected.
     """
-    await delete_product_service(standard_product.id)
+    await delete_product_by_id_service(standard_product.id)
 
     with pytest.raises(AppException) as app_exception:
         await get_product_by_id_service(standard_product.id)

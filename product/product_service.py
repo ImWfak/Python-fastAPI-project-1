@@ -96,7 +96,7 @@ async def create_product_service(create_product_schema: CreateProductSchema) -> 
     return await ProductModel.create(**create_product_schema.model_dump())
 
 
-async def update_product_service(id: int, update_product_schema: UpdateProductSchema) -> ProductModel:
+async def update_product_by_id_service(id: int, update_product_schema: UpdateProductSchema) -> ProductModel:
     """
     Updates an existing product with the supplied field values and persists the changes.
 
@@ -123,7 +123,7 @@ async def update_product_service(id: int, update_product_schema: UpdateProductSc
     return await product_for_update
 
 
-async def delete_product_service(id: int) -> None:
+async def delete_product_by_id_service(id: int) -> None:
     """
     Deletes an existing product from the database.
 

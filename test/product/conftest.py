@@ -7,10 +7,12 @@ from _pytest._code import ExceptionInfo
 from exception.app_exception import AppException
 from exception.exeption_source_enum import ExceptionSourceEnum
 from product.product_model import ProductModel
+from user.user_access_enum import UserAccessEnum
 
 NONEXISTENT_ID = 0
 STANDARD_NAME = "test name"
 STANDARD_PRICE_IN_CENTS = Decimal("0")
+STANDARD_USER_ACCESS = UserAccessEnum.HIGH
 
 
 @pytest_asyncio.fixture
@@ -23,6 +25,7 @@ async def standard_product() -> ProductModel:
     return await ProductModel.create(
         name=STANDARD_NAME,
         price_in_cents=STANDARD_PRICE_IN_CENTS,
+        user_access=STANDARD_USER_ACCESS
     )
 
 
@@ -35,6 +38,7 @@ def assert_standard_product(product: ProductModel) -> None:
     """
     assert product.name == STANDARD_NAME
     assert product.price_in_cents == STANDARD_PRICE_IN_CENTS
+    assert product.user_access == STANDARD_USER_ACCESS
 
 
 def assert_standard_product_from_dict(product_dict: dict) -> None:
@@ -46,6 +50,7 @@ def assert_standard_product_from_dict(product_dict: dict) -> None:
     """
     assert product_dict.get("name") == STANDARD_NAME
     assert Decimal(str(product_dict.get("price_in_cents"))) == STANDARD_PRICE_IN_CENTS
+    assert product_dict.get("user_access") == STANDARD_USER_ACCESS
 
 
 def assert_product_not_found(

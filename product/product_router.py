@@ -8,11 +8,11 @@ from product.product_schema import (
 )
 from product.product_service import (
     create_product_service,
-    delete_product_service,
+    delete_product_by_id_service,
     get_all_products_service,
     get_product_by_id_service,
     get_some_products_service,
-    update_product_service
+    update_product_by_id_service
 )
 
 product_router = APIRouter(
@@ -116,7 +116,7 @@ async def update_product_router(id: int, update_product_schema: UpdateProductSch
         fails schema validation (e.g. ``name`` is not a string, or ``price_in_cents``
         is not a valid decimal).
     """
-    return await update_product_service(id, update_product_schema)
+    return await update_product_by_id_service(id, update_product_schema)
 
 
 @product_router.delete("/{id}", status_code=204)
@@ -134,4 +134,4 @@ async def delete_product_router(id: int) -> None:
     :raises AppException: With ``HTTP 404 NOT_FOUND`` if no product with the given
         ``id`` exists.
     """
-    await delete_product_service(id)
+    await delete_product_by_id_service(id)

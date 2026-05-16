@@ -8,6 +8,7 @@ from conftest import (
     STANDARD_NAME,
     NONEXISTENT_ID,
     STANDARD_PRICE_IN_CENTS,
+    STANDARD_USER_ACCESS
 )
 from product.conftest import (
     assert_standard_product_from_dict,
@@ -154,7 +155,11 @@ async def test_1_create_product_router(async_client: AsyncClient) -> None:
     """
     response = await async_client.post(
         url="/product/",
-        json={"name": STANDARD_NAME, "price_in_cents": str(STANDARD_PRICE_IN_CENTS)},
+        json={
+            "name": STANDARD_NAME,
+            "price_in_cents": str(STANDARD_PRICE_IN_CENTS),
+            "user_access": STANDARD_USER_ACCESS
+        }
     )
 
     assert response.status_code == HTTPStatus.OK
@@ -169,9 +174,14 @@ async def test_2_create_product_router(async_client: AsyncClient) -> None:
     :raises AssertionError: If the status code or validation error details are unexpected.
     """
     wrong_name = 1
+
     response = await async_client.post(
         url="/product/",
-        json={"name": wrong_name, "price_in_cents": str(STANDARD_PRICE_IN_CENTS)},
+        json={
+            "name": wrong_name,
+            "price_in_cents": str(STANDARD_PRICE_IN_CENTS),
+            "user_access": STANDARD_USER_ACCESS
+        }
     )
     error = response.json()["detail"][0]
 
@@ -190,9 +200,14 @@ async def test_3_create_product_router(async_client: AsyncClient) -> None:
     :raises AssertionError: If the status code or validation error details are unexpected.
     """
     wrong_price_in_cents = ""
+
     response = await async_client.post(
         url="/product/",
-        json={"name": STANDARD_NAME, "price_in_cents": wrong_price_in_cents},
+        json={
+            "name": STANDARD_NAME,
+            "price_in_cents": wrong_price_in_cents,
+            "user_access": STANDARD_USER_ACCESS
+        }
     )
     error = response.json()["detail"][0]
 
@@ -201,6 +216,26 @@ async def test_3_create_product_router(async_client: AsyncClient) -> None:
     assert error["loc"] == ["body", "price_in_cents"]
     assert error["msg"] == "Input should be a valid decimal"
     assert error["input"] == wrong_price_in_cents
+
+
+async def test_4_create_product_router(async_client: AsyncClient) -> None:
+    wrong_user_access = ""
+
+    response = await async_client.post(
+        url="/product/",
+        json={
+            "name": STANDARD_NAME,
+            "price_in_cents": str(STANDARD_PRICE_IN_CENTS),
+            "user_access": wrong_user_access
+        }
+    )
+    error = response.json()["detail"][0]
+
+    assert response.status_code == HTTPStatus.UNPROCESSABLE_CONTENT
+    assert error["type"] == "enum"
+    assert error["loc"] == ["body", "user_access"]
+    assert error["msg"] == "Input should be 'HIGH', 'MIDDLE' or 'LOW'"
+    assert error["input"] == wrong_user_access
 
 
 async def test_1_update_product_router(async_client: AsyncClient) -> None:
@@ -212,7 +247,11 @@ async def test_1_update_product_router(async_client: AsyncClient) -> None:
     """
     response = await async_client.patch(
         url=f"/product/{NONEXISTENT_ID}",
-        json={"name": STANDARD_NAME, "price_in_cents": str(STANDARD_PRICE_IN_CENTS)},
+        json={
+            "name": STANDARD_NAME,
+            "price_in_cents": str(STANDARD_PRICE_IN_CENTS),
+            "user_access": STANDARD_USER_ACCESS
+        }
     )
 
     assert response.status_code == HTTPStatus.NOT_FOUND
@@ -231,9 +270,14 @@ async def test_2_update_product_router(
     :raises AssertionError: If the status code or validation error details are unexpected.
     """
     wrong_name = 1
+
     response = await async_client.patch(
         url=f"/product/{standard_product.id}",
-        json={"name": wrong_name, "price_in_cents": str(STANDARD_PRICE_IN_CENTS)},
+        json={
+            "name": wrong_name,
+            "price_in_cents": str(STANDARD_PRICE_IN_CENTS),
+            "user_access": STANDARD_USER_ACCESS
+        }
     )
     error = response.json()["detail"][0]
 
@@ -256,9 +300,14 @@ async def test_3_update_product_router(
     :raises AssertionError: If the status code or validation error details are unexpected.
     """
     wrong_price_in_cents = ""
+
     response = await async_client.patch(
         url=f"/product/{standard_product.id}",
-        json={"name": STANDARD_NAME, "price_in_cents": wrong_price_in_cents},
+        json={
+            "name": STANDARD_NAME,
+            "price_in_cents": wrong_price_in_cents,
+            "user_access": STANDARD_USER_ACCESS
+        }
     )
     error = response.json()["detail"][0]
 
@@ -273,6 +322,29 @@ async def test_4_update_product_router(
         async_client: AsyncClient,
         standard_product: ProductModel,
 ) -> None:
+    wrong_user_access = ""
+
+    response = await async_client.patch(
+        url=f"/product/{standard_product.id}",
+        json={
+            "name": STANDARD_NAME,
+            "price_in_cents": str(STANDARD_PRICE_IN_CENTS),
+            "user_access": wrong_user_access
+        }
+    )
+    error = response.json()["detail"][0]
+
+    assert response.status_code == HTTPStatus.UNPROCESSABLE_CONTENT
+    assert error["type"] == "enum"
+    assert error["loc"] == ["body", "user_access"]
+    assert error["msg"] == "Input should be 'HIGH', 'MIDDLE' or 'LOW'"
+    assert error["input"] == wrong_user_access
+    
+
+async def test_5_update_product_router(
+        async_client: AsyncClient,
+        standard_product: ProductModel,
+) -> None:
     """
     Verifies that ``PATCH /product/{id}`` returns ``200 OK`` and correctly persists new
     values when a valid request body is supplied for an existing product.
@@ -284,9 +356,14 @@ async def test_4_update_product_router(
     """
     updated_name = STANDARD_NAME + "_updated"
     updated_price_in_cents = STANDARD_PRICE_IN_CENTS + Decimal("10")
+
     response = await async_client.patch(
         url=f"/product/{standard_product.id}",
-        json={"name": updated_name, "price_in_cents": str(updated_price_in_cents)},
+        json={
+            "name": updated_name,
+            "price_in_cents": str(updated_price_in_cents),
+            "user_access": STANDARD_USER_ACCESS
+        }
     )
     updated_product = response.json()
 

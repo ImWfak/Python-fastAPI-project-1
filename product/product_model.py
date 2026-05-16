@@ -1,6 +1,7 @@
 from tortoise import models, fields
 
 from db.timestamp_mixin import TimestampMixin
+from user.user_access_enum import UserAccessEnum
 
 
 class ProductModel(
@@ -19,6 +20,12 @@ class ProductModel(
         decimal_places=0,
         max_digits=10,
         min_value=1
+    )
+
+    user_access = fields.CharEnumField(
+        enum_type=UserAccessEnum,
+        max_lenght=6,
+        required=True
     )
 
     class Meta:
