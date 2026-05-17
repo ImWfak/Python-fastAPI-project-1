@@ -12,7 +12,7 @@ from conftest import (
 )
 from product.conftest import (
     assert_standard_product_from_dict,
-    assert_product_not_found_from_dict,
+    assert_product_not_found_from_dict
 )
 from product.product_model import ProductModel
 
@@ -46,7 +46,7 @@ async def test_2_get_all_products_router(
 
     assert response.status_code == HTTPStatus.OK
     assert len(all_products) == 1
-    assert_standard_product_from_dict(all_products[0])
+    await assert_standard_product_from_dict(all_products[0])
 
 
 async def test_1_get_some_products_router(async_client: AsyncClient) -> None:
@@ -114,7 +114,7 @@ async def test_4_get_some_products_router(
 
     assert response.status_code == HTTPStatus.OK
     assert len(some_products) == 1
-    assert_standard_product_from_dict(some_products[0])
+    await assert_standard_product_from_dict(some_products[0])
 
 
 async def test_1_get_product_by_id_router(async_client: AsyncClient) -> None:
@@ -127,7 +127,7 @@ async def test_1_get_product_by_id_router(async_client: AsyncClient) -> None:
     response = await async_client.get(url=f"/product/{NONEXISTENT_ID}")
 
     assert response.status_code == HTTPStatus.NOT_FOUND
-    assert_product_not_found_from_dict(NONEXISTENT_ID, response.json())
+    await assert_product_not_found_from_dict(NONEXISTENT_ID, response.json())
 
 
 async def test_2_get_product_by_id_router(
@@ -143,7 +143,7 @@ async def test_2_get_product_by_id_router(
     response = await async_client.get(url=f"/product/{standard_product.id}")
 
     assert response.status_code == HTTPStatus.OK
-    assert_standard_product_from_dict(response.json())
+    await assert_standard_product_from_dict(response.json())
 
 
 async def test_1_create_product_router(async_client: AsyncClient) -> None:
@@ -163,7 +163,7 @@ async def test_1_create_product_router(async_client: AsyncClient) -> None:
     )
 
     assert response.status_code == HTTPStatus.OK
-    assert_standard_product_from_dict(response.json())
+    await assert_standard_product_from_dict(response.json())
 
 
 async def test_2_create_product_router(async_client: AsyncClient) -> None:
@@ -255,7 +255,7 @@ async def test_1_update_product_router(async_client: AsyncClient) -> None:
     )
 
     assert response.status_code == HTTPStatus.NOT_FOUND
-    assert_product_not_found_from_dict(NONEXISTENT_ID, response.json())
+    await assert_product_not_found_from_dict(NONEXISTENT_ID, response.json())
 
 
 async def test_2_update_product_router(
@@ -382,7 +382,7 @@ async def test_1_delete_product_router(async_client: AsyncClient) -> None:
     response = await async_client.delete(url=f"/product/{NONEXISTENT_ID}")
 
     assert response.status_code == HTTPStatus.NOT_FOUND
-    assert_product_not_found_from_dict(NONEXISTENT_ID, response.json())
+    await assert_product_not_found_from_dict(NONEXISTENT_ID, response.json())
 
 
 async def test_2_delete_product_router(

@@ -29,7 +29,7 @@ async def standard_product() -> ProductModel:
     )
 
 
-def assert_standard_product(product: ProductModel) -> None:
+async def assert_standard_product(product: ProductModel) -> None:
     """
     Asserts that a product matches the standard test fixtures.
 
@@ -41,7 +41,7 @@ def assert_standard_product(product: ProductModel) -> None:
     assert product.user_access == STANDARD_USER_ACCESS
 
 
-def assert_standard_product_from_dict(product_dict: dict) -> None:
+async def assert_standard_product_from_dict(product_dict: dict) -> None:
     """
     Asserts that a product dictionary matches the standard test fixtures.
 
@@ -53,7 +53,7 @@ def assert_standard_product_from_dict(product_dict: dict) -> None:
     assert product_dict.get("user_access") == STANDARD_USER_ACCESS
 
 
-def assert_product_not_found(
+async def assert_product_not_found(
         searchable_product_id: int,
         app_exception: ExceptionInfo[AppException],
 ) -> None:
@@ -70,7 +70,7 @@ def assert_product_not_found(
     assert exc.http_status_code == HTTPStatus.NOT_FOUND
 
 
-def assert_product_not_found_from_dict(
+async def assert_product_not_found_from_dict(
         searchable_product_id: int,
         app_exception_from_dict: dict,
 ) -> None:

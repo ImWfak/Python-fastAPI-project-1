@@ -25,7 +25,8 @@ async def db():
         "apps": {
             "models": {
                 "models": [
-                    "product.product_model"
+                    "product.product_model",
+                    "user.user_model"
                 ],
                 "default_connection": "default"
             }

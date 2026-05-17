@@ -18,7 +18,8 @@ def connect_to_db(app: FastAPI) -> None:
         db_url=f"postgres://{USER}:{PASSWORD}@{HOST}:{PORT}/{DATABASE}",
         modules={
             "models": [
-                "product.product_model"
+                "product.product_model",
+                "user.user_model"
             ]
         },
         generate_schemas=True,

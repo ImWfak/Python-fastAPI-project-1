@@ -120,7 +120,7 @@ async def update_product_by_id_service(id: int, update_product_schema: UpdatePro
     await product_for_update.update_from_dict(update_data)
     await product_for_update.save()
 
-    return await product_for_update
+    return product_for_update
 
 
 async def delete_product_by_id_service(id: int) -> None:

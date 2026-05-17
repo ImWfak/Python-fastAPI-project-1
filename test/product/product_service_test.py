@@ -3,20 +3,18 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from conftest import (
-    STANDARD_NAME,
-    NONEXISTENT_ID,
-    STANDARD_PRICE_IN_CENTS,
-)
 from exception.app_exception import AppException
 from product.conftest import (
     assert_standard_product,
     assert_product_not_found,
+    STANDARD_NAME,
+    NONEXISTENT_ID,
+    STANDARD_PRICE_IN_CENTS
 )
 from product.product_model import ProductModel
 from product.product_schema import (
     CreateProductSchema,
-    UpdateProductSchema,
+    UpdateProductSchema
 )
 from product.product_service import (
     get_all_products_service,
@@ -24,7 +22,7 @@ from product.product_service import (
     get_product_by_id_service,
     create_product_service,
     update_product_by_id_service,
-    delete_product_by_id_service,
+    delete_product_by_id_service
 )
 from user.user_access_enum import UserAccessEnum
 
@@ -68,7 +66,7 @@ async def test_2_get_all_products_service(standard_product: ProductModel) -> Non
     all_products: list[ProductModel] = await get_all_products_service()
 
     assert len(all_products) == 1
-    assert_standard_product(all_products[0])
+    await assert_standard_product(all_products[0])
 
 
 async def test_1_get_some_products_service() -> None:
@@ -122,7 +120,7 @@ async def test_4_get_some_products_service(standard_product: ProductModel) -> No
     )
 
     assert len(some_products) == 1
-    assert_standard_product(some_products[0])
+    await assert_standard_product(some_products[0])
 
 
 async def test_1_get_product_by_id_service() -> None:
@@ -135,7 +133,7 @@ async def test_1_get_product_by_id_service() -> None:
     with pytest.raises(AppException) as app_exception:
         await get_product_by_id_service(NONEXISTENT_ID)
 
-    assert_product_not_found(NONEXISTENT_ID, app_exception)
+    await assert_product_not_found(NONEXISTENT_ID, app_exception)
 
 
 async def test_2_get_product_by_id_service(standard_product: ProductModel) -> None:
@@ -147,7 +145,7 @@ async def test_2_get_product_by_id_service(standard_product: ProductModel) -> No
     """
     found_product: ProductModel = await get_product_by_id_service(standard_product.id)
 
-    assert_standard_product(found_product)
+    await assert_standard_product(found_product)
 
 
 async def test_1_create_product_service() -> None:
@@ -164,7 +162,7 @@ async def test_1_create_product_service() -> None:
     )
     created_product: ProductModel = await create_product_service(create_product_schema)
 
-    assert_standard_product(created_product)
+    await assert_standard_product(created_product)
 
 
 async def test_2_create_product_service() -> None:
@@ -321,7 +319,7 @@ async def test_1_delete_product_by_id_service() -> None:
     with pytest.raises(AppException) as app_exception:
         await delete_product_by_id_service(NONEXISTENT_ID)
 
-    assert_product_not_found(NONEXISTENT_ID, app_exception)
+    await assert_product_not_found(NONEXISTENT_ID, app_exception)
 
 
 async def test_2_delete_product_by_id_service(standard_product: ProductModel) -> None:
@@ -338,4 +336,4 @@ async def test_2_delete_product_by_id_service(standard_product: ProductModel) ->
     with pytest.raises(AppException) as app_exception:
         await get_product_by_id_service(standard_product.id)
 
-    assert_product_not_found(standard_product.id, app_exception)
+    await assert_product_not_found(standard_product.id, app_exception)
