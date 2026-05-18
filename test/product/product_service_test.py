@@ -3,13 +3,16 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
+from constants import (
+    NONEXISTENT_ID,
+    STRING_TYPE_PATTERN,
+    DECIMAL_TYPE_PATTERN,
+    ENUM_TYPE_PATTERN
+)
 from exception.app_exception import AppException
 from product.conftest import (
     assert_standard_product,
-    assert_product_not_found,
-    STANDARD_NAME,
-    NONEXISTENT_ID,
-    STANDARD_PRICE_IN_CENTS
+    assert_product_not_found
 )
 from product.product_model import ProductModel
 from product.product_schema import (
@@ -24,26 +27,17 @@ from product.product_service import (
     update_product_by_id_service,
     delete_product_by_id_service
 )
+from product_constants import (
+    STANDARD_NAME,
+    STANDARD_PRICE_IN_CENTS,
+    STANDARD_USER_ACCESS,
+    WRONG_NAME,
+    WRONG_PRICE_IN_CENTS,
+    WRONG_USER_ACCESS
+)
 from user.user_access_enum import UserAccessEnum
 
 pytestmark = pytest.mark.asyncio
-
-_PYDANTIC_BASE_URL = r"https://errors\.pydantic\.dev/2\.12\/v"
-_STRING_TYPE_PATTERN = (
-        r"Input should be a valid string "
-        r"\[type=string_type, input_value=.+, input_type=int\]\n"
-        r"\s+For further information visit " + _PYDANTIC_BASE_URL + r"\/string_type"
-)
-_DECIMAL_PARSING_PATTERN = (
-        r"Input should be a valid decimal "
-        r"\[type=decimal_parsing, input_value='', input_type=str\]\n"
-        r"\s+For further information visit " + _PYDANTIC_BASE_URL + r"\/decimal_parsing"
-)
-_ENUM_TYPE_PATTERN = (
-        r"Input should be 'HIGH', 'MIDDLE' or 'LOW' "
-        r"\[type=enum, input_value='', input_type=str]\n"
-        r"\s+For further information visit " + _PYDANTIC_BASE_URL + r"\/enum"
-)
 
 
 async def test_1_get_all_products_service() -> None:
@@ -158,8 +152,9 @@ async def test_1_create_product_service() -> None:
     create_product_schema = CreateProductSchema(
         name=STANDARD_NAME,
         price_in_cents=STANDARD_PRICE_IN_CENTS,
-        user_access=UserAccessEnum.HIGH
+        user_access=STANDARD_USER_ACCESS
     )
+
     created_product: ProductModel = await create_product_service(create_product_schema)
 
     await assert_standard_product(created_product)
@@ -174,12 +169,12 @@ async def test_2_create_product_service() -> None:
     """
     with pytest.raises(
             ValidationError,
-            match=f"^1 validation error for CreateProductSchema\nname\n\\s+{_STRING_TYPE_PATTERN}$",
+            match=f"^1 validation error for CreateProductSchema\nname\n\\s+{STRING_TYPE_PATTERN}$"
     ):
         CreateProductSchema(
-            name=1,
+            name=WRONG_NAME,
             price_in_cents=STANDARD_PRICE_IN_CENTS,
-            user_access=UserAccessEnum.HIGH
+            user_access=STANDARD_USER_ACCESS
         )
 
 
@@ -193,24 +188,24 @@ async def test_3_create_product_service() -> None:
     """
     with pytest.raises(
             ValidationError,
-            match=f"^1 validation error for CreateProductSchema\nprice_in_cents\n\\s+{_DECIMAL_PARSING_PATTERN}$",
+            match=f"^1 validation error for CreateProductSchema\nprice_in_cents\n\\s+{DECIMAL_TYPE_PATTERN}$",
     ):
         CreateProductSchema(
             name=STANDARD_NAME,
-            price_in_cents="",
-            user_access=UserAccessEnum.HIGH
+            price_in_cents=WRONG_PRICE_IN_CENTS,
+            user_access=STANDARD_USER_ACCESS
         )
 
 
 async def test_4_create_product_service() -> None:
     with pytest.raises(
             ValidationError,
-            match=f"^1 validation error for CreateProductSchema\nuser_access\n\\s+{_ENUM_TYPE_PATTERN}"
+            match=f"^1 validation error for CreateProductSchema\nuser_access\n\\s+{ENUM_TYPE_PATTERN}"
     ):
         CreateProductSchema(
             name=STANDARD_NAME,
             price_in_cents=STANDARD_PRICE_IN_CENTS,
-            user_access=""
+            user_access=WRONG_PRICE_IN_CENTS
         )
 
 
@@ -224,13 +219,13 @@ async def test_1_update_product_by_id_service() -> None:
     update_product_schema = UpdateProductSchema(
         name=STANDARD_NAME,
         price_in_cents=STANDARD_PRICE_IN_CENTS,
-        user_access=UserAccessEnum.HIGH
+        user_access=STANDARD_USER_ACCESS
     )
 
     with pytest.raises(AppException) as app_exception:
         await update_product_by_id_service(NONEXISTENT_ID, update_product_schema)
 
-    assert_product_not_found(NONEXISTENT_ID, app_exception)
+    await assert_product_not_found(NONEXISTENT_ID, app_exception)
 
 
 async def test_2_update_product_by_id_service(standard_product: ProductModel) -> None:
@@ -243,12 +238,12 @@ async def test_2_update_product_by_id_service(standard_product: ProductModel) ->
     """
     with pytest.raises(
             ValidationError,
-            match=f"^1 validation error for UpdateProductSchema\nname\n\\s+{_STRING_TYPE_PATTERN}$",
+            match=f"^1 validation error for UpdateProductSchema\nname\n\\s+{STRING_TYPE_PATTERN}$",
     ):
         UpdateProductSchema(
-            name=1,
+            name=WRONG_NAME,
             price_in_cents=STANDARD_PRICE_IN_CENTS,
-            user_access=UserAccessEnum.HIGH
+            user_access=STANDARD_USER_ACCESS
         )
 
 
@@ -262,24 +257,24 @@ async def test_3_update_product_by_id_service(standard_product: ProductModel) ->
     """
     with pytest.raises(
             ValidationError,
-            match=f"^1 validation error for UpdateProductSchema\nprice_in_cents\n\\s+{_DECIMAL_PARSING_PATTERN}$",
+            match=f"^1 validation error for UpdateProductSchema\nprice_in_cents\n\\s+{DECIMAL_TYPE_PATTERN}$",
     ):
         UpdateProductSchema(
             name=STANDARD_NAME,
-            price_in_cents="",
-            user_access=UserAccessEnum.HIGH
+            price_in_cents=WRONG_PRICE_IN_CENTS,
+            user_access=STANDARD_USER_ACCESS
         )
 
 
 async def test_4_update_product_by_id_service(standard_product: ProductModel) -> None:
     with pytest.raises(
             ValidationError,
-            match=f"^1 validation error for UpdateProductSchema\nuser_access\n\\s+{_ENUM_TYPE_PATTERN}"
+            match=f"^1 validation error for UpdateProductSchema\nuser_access\n\\s+{ENUM_TYPE_PATTERN}"
     ):
         UpdateProductSchema(
             name=STANDARD_NAME,
             price_in_cents=STANDARD_PRICE_IN_CENTS,
-            user_access=""
+            user_access=WRONG_USER_ACCESS
         )
 
 

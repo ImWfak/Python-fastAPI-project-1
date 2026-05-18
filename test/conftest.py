@@ -36,13 +36,16 @@ async def db():
 
     yield
 
-    await Tortoise.get_connection("default").execute_script(
-        """
-        DROP SCHEMA public CASCADE;
-        CREATE SCHEMA public;
-        """
-    )
-    await Tortoise.close_connections()
+    try:
+        await Tortoise.get_connection("default").execute_script(
+            """
+            DROP SCHEMA public CASCADE;
+            CREATE SCHEMA public;
+            """
+        )
+
+    finally:
+        await Tortoise.close_connections()
 
 
 @pytest_asyncio.fixture()

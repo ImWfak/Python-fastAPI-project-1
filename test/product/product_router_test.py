@@ -4,17 +4,21 @@ from http import HTTPStatus
 import pytest
 from httpx import AsyncClient
 
-from conftest import (
-    STANDARD_NAME,
-    NONEXISTENT_ID,
-    STANDARD_PRICE_IN_CENTS,
-    STANDARD_USER_ACCESS
-)
+from constants import NONEXISTENT_ID
 from product.conftest import (
     assert_standard_product_from_dict,
     assert_product_not_found_from_dict
 )
 from product.product_model import ProductModel
+from product_constants import (
+    STANDARD_NAME,
+    STANDARD_PRICE_IN_CENTS,
+    STANDARD_USER_ACCESS,
+    WRONG_NAME,
+    WRONG_PRICE_IN_CENTS,
+    WRONG_USER_ACCESS
+)
+from user.user_access_enum import UserAccessEnum
 
 pytestmark = pytest.mark.asyncio
 
@@ -173,12 +177,10 @@ async def test_2_create_product_router(async_client: AsyncClient) -> None:
 
     :raises AssertionError: If the status code or validation error details are unexpected.
     """
-    wrong_name = 1
-
     response = await async_client.post(
         url="/product/",
         json={
-            "name": wrong_name,
+            "name": WRONG_NAME,
             "price_in_cents": str(STANDARD_PRICE_IN_CENTS),
             "user_access": STANDARD_USER_ACCESS
         }
@@ -189,7 +191,7 @@ async def test_2_create_product_router(async_client: AsyncClient) -> None:
     assert error["type"] == "string_type"
     assert error["loc"] == ["body", "name"]
     assert error["msg"] == "Input should be a valid string"
-    assert error["input"] == wrong_name
+    assert error["input"] == WRONG_NAME
 
 
 async def test_3_create_product_router(async_client: AsyncClient) -> None:
@@ -199,13 +201,11 @@ async def test_3_create_product_router(async_client: AsyncClient) -> None:
 
     :raises AssertionError: If the status code or validation error details are unexpected.
     """
-    wrong_price_in_cents = ""
-
     response = await async_client.post(
         url="/product/",
         json={
             "name": STANDARD_NAME,
-            "price_in_cents": wrong_price_in_cents,
+            "price_in_cents": WRONG_PRICE_IN_CENTS,
             "user_access": STANDARD_USER_ACCESS
         }
     )
@@ -215,18 +215,16 @@ async def test_3_create_product_router(async_client: AsyncClient) -> None:
     assert error["type"] == "decimal_parsing"
     assert error["loc"] == ["body", "price_in_cents"]
     assert error["msg"] == "Input should be a valid decimal"
-    assert error["input"] == wrong_price_in_cents
+    assert error["input"] == WRONG_PRICE_IN_CENTS
 
 
 async def test_4_create_product_router(async_client: AsyncClient) -> None:
-    wrong_user_access = ""
-
     response = await async_client.post(
         url="/product/",
         json={
             "name": STANDARD_NAME,
             "price_in_cents": str(STANDARD_PRICE_IN_CENTS),
-            "user_access": wrong_user_access
+            "user_access": WRONG_USER_ACCESS
         }
     )
     error = response.json()["detail"][0]
@@ -235,7 +233,7 @@ async def test_4_create_product_router(async_client: AsyncClient) -> None:
     assert error["type"] == "enum"
     assert error["loc"] == ["body", "user_access"]
     assert error["msg"] == "Input should be 'HIGH', 'MIDDLE' or 'LOW'"
-    assert error["input"] == wrong_user_access
+    assert error["input"] == WRONG_USER_ACCESS
 
 
 async def test_1_update_product_router(async_client: AsyncClient) -> None:
@@ -269,12 +267,10 @@ async def test_2_update_product_router(
 
     :raises AssertionError: If the status code or validation error details are unexpected.
     """
-    wrong_name = 1
-
     response = await async_client.patch(
         url=f"/product/{standard_product.id}",
         json={
-            "name": wrong_name,
+            "name": WRONG_NAME,
             "price_in_cents": str(STANDARD_PRICE_IN_CENTS),
             "user_access": STANDARD_USER_ACCESS
         }
@@ -285,7 +281,7 @@ async def test_2_update_product_router(
     assert error["type"] == "string_type"
     assert error["loc"] == ["body", "name"]
     assert error["msg"] == "Input should be a valid string"
-    assert error["input"] == wrong_name
+    assert error["input"] == WRONG_NAME
 
 
 async def test_3_update_product_router(
@@ -299,13 +295,11 @@ async def test_3_update_product_router(
 
     :raises AssertionError: If the status code or validation error details are unexpected.
     """
-    wrong_price_in_cents = ""
-
     response = await async_client.patch(
         url=f"/product/{standard_product.id}",
         json={
             "name": STANDARD_NAME,
-            "price_in_cents": wrong_price_in_cents,
+            "price_in_cents": WRONG_PRICE_IN_CENTS,
             "user_access": STANDARD_USER_ACCESS
         }
     )
@@ -315,21 +309,19 @@ async def test_3_update_product_router(
     assert error["type"] == "decimal_parsing"
     assert error["loc"] == ["body", "price_in_cents"]
     assert error["msg"] == "Input should be a valid decimal"
-    assert error["input"] == wrong_price_in_cents
+    assert error["input"] == WRONG_PRICE_IN_CENTS
 
 
 async def test_4_update_product_router(
         async_client: AsyncClient,
         standard_product: ProductModel,
 ) -> None:
-    wrong_user_access = ""
-
     response = await async_client.patch(
         url=f"/product/{standard_product.id}",
         json={
             "name": STANDARD_NAME,
             "price_in_cents": str(STANDARD_PRICE_IN_CENTS),
-            "user_access": wrong_user_access
+            "user_access": WRONG_USER_ACCESS
         }
     )
     error = response.json()["detail"][0]
@@ -338,7 +330,7 @@ async def test_4_update_product_router(
     assert error["type"] == "enum"
     assert error["loc"] == ["body", "user_access"]
     assert error["msg"] == "Input should be 'HIGH', 'MIDDLE' or 'LOW'"
-    assert error["input"] == wrong_user_access
+    assert error["input"] == WRONG_USER_ACCESS
     
 
 async def test_5_update_product_router(
@@ -356,13 +348,14 @@ async def test_5_update_product_router(
     """
     updated_name = STANDARD_NAME + "_updated"
     updated_price_in_cents = STANDARD_PRICE_IN_CENTS + Decimal("10")
+    updated_user_access = UserAccessEnum.LOW
 
     response = await async_client.patch(
         url=f"/product/{standard_product.id}",
         json={
             "name": updated_name,
             "price_in_cents": str(updated_price_in_cents),
-            "user_access": STANDARD_USER_ACCESS
+            "user_access": updated_user_access
         }
     )
     updated_product = response.json()
@@ -370,6 +363,7 @@ async def test_5_update_product_router(
     assert response.status_code == HTTPStatus.OK
     assert updated_product["name"] == updated_name
     assert Decimal(str(updated_product["price_in_cents"])) == updated_price_in_cents
+    assert updated_product["user_access"] == updated_user_access
 
 
 async def test_1_delete_product_router(async_client: AsyncClient) -> None:

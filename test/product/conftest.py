@@ -7,12 +7,11 @@ from _pytest._code import ExceptionInfo
 from exception.app_exception import AppException
 from exception.exeption_source_enum import ExceptionSourceEnum
 from product.product_model import ProductModel
-from user.user_access_enum import UserAccessEnum
-
-NONEXISTENT_ID = 0
-STANDARD_NAME = "test name"
-STANDARD_PRICE_IN_CENTS = Decimal("0")
-STANDARD_USER_ACCESS = UserAccessEnum.HIGH
+from product_constants import (
+    STANDARD_NAME,
+    STANDARD_PRICE_IN_CENTS,
+    STANDARD_USER_ACCESS
+)
 
 
 @pytest_asyncio.fixture
@@ -64,10 +63,10 @@ async def assert_product_not_found(
     :param app_exception: The captured pytest exception info wrapping the :class:`AppException`.
     :raises AssertionError: If the exception message, source, or HTTP status code are unexpected.
     """
-    exc = app_exception.value
-    assert exc.message == f"Product with id {searchable_product_id} not found"
-    assert exc.exception_source == ExceptionSourceEnum.PRODUCT_SERVICE
-    assert exc.http_status_code == HTTPStatus.NOT_FOUND
+    exception_value = app_exception.value
+    assert exception_value.message == f"Product with id {searchable_product_id} not found"
+    assert exception_value.exception_source == ExceptionSourceEnum.PRODUCT_SERVICE
+    assert exception_value.http_status_code == HTTPStatus.NOT_FOUND
 
 
 async def assert_product_not_found_from_dict(
