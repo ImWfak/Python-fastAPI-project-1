@@ -10,7 +10,7 @@ from constants import (
     ENUM_TYPE_PATTERN
 )
 from exception.app_exception import AppException
-from product.conftest import (
+from product.product_asserts import (
     assert_standard_product,
     assert_product_not_found
 )
@@ -297,6 +297,7 @@ async def test_5_update_product_by_id_service(standard_product: ProductModel) ->
         price_in_cents=updated_price_in_cents,
         user_access=updated_user_access
     )
+
     updated_product: ProductModel = await update_product_by_id_service(standard_product.id, update_product_schema)
 
     assert updated_product.name == updated_name

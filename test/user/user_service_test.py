@@ -7,14 +7,14 @@ from constants import (
     ENUM_TYPE_PATTERN
 )
 from exception.app_exception import AppException
-from user.conftest import (
-    standard_user,
+from user.conftest import standard_user
+from user.user_access_enum import UserAccessEnum
+from user.user_asserts import (
     assert_standard_user,
     assert_user_not_found_by_id,
     assert_user_not_found_by_username,
     assert_username_already_exists
 )
-from user.user_access_enum import UserAccessEnum
 from user.user_model import UserModel
 from user.user_schema import (
     CreateUserSchema,
@@ -232,6 +232,7 @@ async def test_5_update_user_srvice(standard_user: UserModel) -> None:
         password=updated_password,
         user_access=updated_user_access
     )
+
     updated_user: UserModel = await update_user_by_id_service(standard_user.id, update_user_schema)
 
     assert updated_user.username == updated_username
