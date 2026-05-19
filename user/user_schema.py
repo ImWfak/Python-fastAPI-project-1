@@ -2,7 +2,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict
 
-from user_access_enum import UserAccessEnum
+from user.user_access_enum import UserAccessEnum
 
 
 class AbstractUserSchema(BaseModel):

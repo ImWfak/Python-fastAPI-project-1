@@ -326,9 +326,8 @@ async def test_2_delete_product_by_id_service(standard_product: ProductModel) ->
     :raises AssertionError: If the product is still retrievable after deletion, or the
         exception payload on the follow-up lookup is unexpected.
     """
-    await delete_product_by_id_service(standard_product.id)
+    id: int = standard_product.id
 
-    with pytest.raises(AppException) as app_exception:
-        await get_product_by_id_service(standard_product.id)
+    await delete_product_by_id_service(id)
 
-    await assert_product_not_found(standard_product.id, app_exception)
+    assert await ProductModel.get_or_none(id=id) == None

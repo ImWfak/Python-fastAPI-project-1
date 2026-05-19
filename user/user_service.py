@@ -1,7 +1,7 @@
 from http import HTTPStatus
 
-from exception.exeption_source_enum import ExceptionSourceEnum
 from exception.app_exception import AppException
+from exception.exeption_source_enum import ExceptionSourceEnum
 from user.user_model import UserModel
 from user.user_schema import (
     CreateUserSchema,
@@ -40,7 +40,7 @@ async def get_all_users_service() -> list[UserModel]:
 
 
 async def get_some_users_service(begin: int, end: int) -> list[UserModel]:
-    return await UserModel.filter(id_gte=begin, id_lte=end)
+    return await UserModel.filter(id__gte=begin, id__lte=end)
 
 
 async def get_user_by_id_service(id: int) -> UserModel:
@@ -52,6 +52,15 @@ async def get_user_by_username_service(username: str) -> UserModel:
 
 
 async def create_user_service(create_user_schema: CreateUserSchema) -> UserModel:
+    new_username: str = create_user_schema.username
+
+    if await UserModel.get_or_none(username=new_username):
+        raise AppException(
+            message=f"User with username {new_username} already exists",
+            exception_source=ExceptionSourceEnum.USER_SERVICE,
+            http_status_code=HTTPStatus.CONFLICT
+        )
+
     return await UserModel.create(**create_user_schema.model_dump())
 
 
@@ -62,7 +71,7 @@ async def update_user_by_id_service(id: int, update_user_schema: UpdateUserSchem
 
     new_username: str | None = update_data.get("username")
 
-    if new_username is not None:
+    if new_username:
         user_for_check: UserModel | None = await UserModel.get_or_none(username=new_username)
 
         if user_for_check and user_for_update.id != user_for_check.id:
