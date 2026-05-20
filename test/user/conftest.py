@@ -1,5 +1,6 @@
 import pytest_asyncio
 
+from auth.auth_service import hash_password
 from user.user_model import UserModel
 from user_constants import (
     STANDARD_USERNAME,
@@ -10,8 +11,10 @@ from user_constants import (
 
 @pytest_asyncio.fixture
 async def standard_user() -> UserModel:
+    hashed_standard_password = await hash_password(STANDARD_PASSWORD)
+
     return await UserModel.create(
         username=STANDARD_USERNAME,
-        password=STANDARD_PASSWORD,
+        password=hashed_standard_password,
         user_access=STANDARD_USER_ACCESS
     )

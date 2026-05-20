@@ -15,9 +15,8 @@ class UserModel(
         unique=True
     )
 
-    password = fields.CharField(
-        required=True,
-        max_length=255
+    password = fields.BinaryField(
+        required=True
     )
 
     user_access = fields.CharEnumField(

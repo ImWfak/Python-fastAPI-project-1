@@ -1,93 +1,94 @@
 from http import HTTPStatus
 
+from auth.auth_service import hash_password
 from exception.app_exception import AppException
 from exception.exeption_source_enum import ExceptionSourceEnum
 from user.user_model import UserModel
-from user.user_schema import (
-    CreateUserSchema,
-    UpdateUserSchema
-)
+from user.user_schema import CreateUserSchema, UpdateUserSchema
+
+
+def _not_found(detail: str) -> AppException:
+    return AppException(
+        message=detail,
+        exception_source=ExceptionSourceEnum.USER_SERVICE,
+        http_status_code=HTTPStatus.NOT_FOUND,
+    )
+
+
+def _conflict(detail: str) -> AppException:
+    return AppException(
+        message=detail,
+        exception_source=ExceptionSourceEnum.USER_SERVICE,
+        http_status_code=HTTPStatus.CONFLICT,
+    )
 
 
 async def get_user_by_id(id: int) -> UserModel:
-    found_user: UserModel | None = await UserModel.get_or_none(id=id)
-
-    if not found_user:
-        raise AppException(
-            message=f"User with id {id} not found",
-            exception_source=ExceptionSourceEnum.USER_SERVICE,
-            http_status_code=HTTPStatus.NOT_FOUND
-        )
-
-    return found_user
+    """Internal helper — raises 404 if the user does not exist."""
+    if user := await UserModel.get_or_none(id=id):
+        return user
+    raise _not_found(f"User with id {id} not found")
 
 
 async def get_user_by_username(username: str) -> UserModel:
-    found_user: UserModel | None = await UserModel.get_or_none(username=username)
-
-    if not found_user:
-        raise AppException(
-            message=f"User with username {username} not found",
-            exception_source=ExceptionSourceEnum.USER_SERVICE,
-            http_status_code=HTTPStatus.NOT_FOUND
-        )
-
-    return found_user
+    """Internal helper — raises 404 if the user does not exist."""
+    if user := await UserModel.get_or_none(username=username):
+        return user
+    raise _not_found(f"User with username {username} not found")
 
 
 async def get_all_users_service() -> list[UserModel]:
+    """Returns all users."""
     return await UserModel.all()
 
 
 async def get_some_users_service(begin: int, end: int) -> list[UserModel]:
+    """Returns all users whose id falls in the inclusive range [begin, end]."""
     return await UserModel.filter(id__gte=begin, id__lte=end)
 
 
 async def get_user_by_id_service(id: int) -> UserModel:
+    """Returns a single user by id. Raises 404 if not found."""
     return await get_user_by_id(id)
 
 
 async def get_user_by_username_service(username: str) -> UserModel:
+    """Returns a single user by username. Raises 404 if not found."""
     return await get_user_by_username(username)
 
 
 async def create_user_service(create_user_schema: CreateUserSchema) -> UserModel:
-    new_username: str = create_user_schema.username
+    """Creates and returns a new user. Raises 409 if the username is already taken."""
+    if await UserModel.get_or_none(username=create_user_schema.username):
+        raise _conflict(f"User with username {create_user_schema.username} already exists")
 
-    if await UserModel.get_or_none(username=new_username):
-        raise AppException(
-            message=f"User with username {new_username} already exists",
-            exception_source=ExceptionSourceEnum.USER_SERVICE,
-            http_status_code=HTTPStatus.CONFLICT
-        )
-
-    return await UserModel.create(**create_user_schema.model_dump())
+    return await UserModel.create(
+        username=create_user_schema.username,
+        password=await hash_password(create_user_schema.password),
+        user_access=create_user_schema.user_access,
+    )
 
 
 async def update_user_by_id_service(id: int, update_user_schema: UpdateUserSchema) -> UserModel:
-    update_data: dict = update_user_schema.model_dump(exclude_unset=True)
+    """Updates and returns the user with the given id. Raises 404 if not found, 409 if the new username is taken."""
+    update_data = update_user_schema.model_dump(exclude_unset=True)
+    user = await get_user_by_id(id)
 
-    user_for_update: UserModel = await get_user_by_id(id)
+    if new_username := update_data.get("username"):
+        existing = await UserModel.get_or_none(username=new_username)
+        if existing and existing.id != user.id:
+            raise _conflict(f"User with username {new_username} already exists")
 
-    new_username: str | None = update_data.get("username")
+    if password := update_data.get("password"):
+        update_data["password"] = await hash_password(password)
 
-    if new_username:
-        user_for_check: UserModel | None = await UserModel.get_or_none(username=new_username)
+    await user.update_from_dict(update_data)
+    await user.save()
 
-        if user_for_check and user_for_update.id != user_for_check.id:
-            raise AppException(
-                message=f"User with username {new_username} already exists",
-                exception_source=ExceptionSourceEnum.USER_SERVICE,
-                http_status_code=HTTPStatus.CONFLICT
-            )
-
-    await user_for_update.update_from_dict(update_data)
-    await user_for_update.save()
-
-    return user_for_update
+    return user
 
 
 async def delete_user_by_id_service(id: int) -> None:
-    user_for_delete: UserModel = await get_user_by_id(id)
-
-    await user_for_delete.delete()
+    """Deletes the user with the given id. Raises 404 if not found."""
+    user = await get_user_by_id(id)
+    await user.delete()

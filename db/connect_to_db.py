@@ -5,11 +5,11 @@ from tortoise.contrib.fastapi import register_tortoise
 
 load_dotenv()
 
-HOST = os.getenv("HOST")
-PORT = os.getenv("PORT")
-USER = os.getenv("USER")
-PASSWORD = os.getenv("PASSWORD")
-DATABASE = os.getenv("DATABASE")
+HOST = os.environ["HOST"]
+PORT = os.environ["PORT"]
+USER = os.environ["USER"]
+PASSWORD = os.environ["PASSWORD"]
+DATABASE = os.environ["DATABASE"]
 
 
 def connect_to_db(app: FastAPI) -> None:

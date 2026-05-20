@@ -9,11 +9,11 @@ from main import app
 
 load_dotenv(".test.env")
 
-HOST = os.getenv("HOST")
-PORT = os.getenv("PORT")
-USER = os.getenv("USER")
-PASSWORD = os.getenv("PASSWORD")
-DATABASE = os.getenv("DATABASE")
+HOST = os.environ["HOST"]
+PORT = os.environ["PORT"]
+USER = os.environ["USER"]
+PASSWORD = os.environ["PASSWORD"]
+DATABASE = os.environ["DATABASE"]
 
 
 @pytest_asyncio.fixture(scope="function", autouse=True)
