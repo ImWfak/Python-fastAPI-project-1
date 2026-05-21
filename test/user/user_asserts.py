@@ -2,7 +2,7 @@ from http import HTTPStatus
 
 from _pytest._code import ExceptionInfo
 
-from auth.auth_service import verify_password
+from auth.auth_service import verify_password_service
 from exception.app_exception import AppException
 from exception.exeption_source_enum import ExceptionSourceEnum
 from user.user_constants import (
@@ -16,7 +16,7 @@ from user.user_model import UserModel
 async def assert_standard_user(user: UserModel) -> None:
     """Asserts that a user matches the standard test fixtures."""
     assert user.username == STANDARD_USERNAME
-    assert await verify_password(STANDARD_PASSWORD, user.password)
+    assert await verify_password_service(STANDARD_PASSWORD, user.password)
     assert user.user_access == STANDARD_USER_ACCESS
 
 

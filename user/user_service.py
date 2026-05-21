@@ -1,6 +1,6 @@
 from http import HTTPStatus
 
-from auth.auth_service import hash_password
+from auth.password_service import hash_password_service
 from exception.app_exception import AppException
 from exception.exeption_source_enum import ExceptionSourceEnum
 from user.user_model import UserModel
@@ -64,7 +64,7 @@ async def create_user_service(create_user_schema: CreateUserSchema) -> UserModel
 
     return await UserModel.create(
         username=create_user_schema.username,
-        password=await hash_password(create_user_schema.password),
+        password=await hash_password_service(create_user_schema.password),
         user_access=create_user_schema.user_access,
     )
 
@@ -80,7 +80,7 @@ async def update_user_by_id_service(id: int, update_user_schema: UpdateUserSchem
             raise _conflict(f"User with username {new_username} already exists")
 
     if password := update_data.get("password"):
-        update_data["password"] = await hash_password(password)
+        update_data["password"] = await hash_password_service(password)
 
     await user.update_from_dict(update_data)
     await user.save()

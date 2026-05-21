@@ -1,7 +1,7 @@
 import pytest
 from pydantic import ValidationError
 
-from auth.auth_service import verify_password
+from auth.auth_service import verify_password_service
 from constants import (
     NONEXISTENT_ID,
     STRING_TYPE_PATTERN,
@@ -240,7 +240,7 @@ async def test_5_update_user_service(standard_user: UserModel) -> None:
     )
 
     assert updated_user.username == updated_username
-    assert await verify_password(updated_password, updated_user.password)
+    assert await verify_password_service(updated_password, updated_user.password)
     assert updated_user.user_access == updated_user_access
 
 
