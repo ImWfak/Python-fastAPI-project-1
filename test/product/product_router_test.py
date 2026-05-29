@@ -4,7 +4,6 @@ from http import HTTPStatus
 import pytest
 from httpx import AsyncClient
 
-from constants import NONEXISTENT_ID
 from product.product_asserts import (
     assert_standard_product_from_dict,
     assert_product_not_found_from_dict,
@@ -13,15 +12,7 @@ from product.product_asserts import (
     assert_product_wrong_user_access,
 )
 from product.product_model import ProductModel
-from product_constants import (
-    STANDARD_NAME,
-    STANDARD_PRICE_IN_CENTS,
-    STANDARD_USER_ACCESS,
-    WRONG_NAME,
-    WRONG_PRICE_IN_CENTS,
-    WRONG_USER_ACCESS,
-)
-from user.user_access_enum import UserAccessEnum
+from test_config import TestProductStandardValues
 
 pytestmark = pytest.mark.asyncio
 
@@ -95,10 +86,13 @@ async def test_4_get_some_products_router(
 
 async def test_1_get_product_by_id_router(async_client: AsyncClient) -> None:
     """GET /product/{id} returns 404 with the expected payload for a non-existent id."""
-    response = await async_client.get(url=f"/product/{NONEXISTENT_ID}")
+    response = await async_client.get(url=f"/product/{TestProductStandardValues.nonexistent_id}")
 
     assert response.status_code == HTTPStatus.NOT_FOUND
-    await assert_product_not_found_from_dict(NONEXISTENT_ID, response.json())
+    await assert_product_not_found_from_dict(
+        TestProductStandardValues.nonexistent_id,
+        response.json(),
+    )
 
 
 async def test_2_get_product_by_id_router(
@@ -117,9 +111,9 @@ async def test_1_create_product_router(async_client: AsyncClient) -> None:
     response = await async_client.post(
         url="/product/",
         json={
-            "name": STANDARD_NAME,
-            "price_in_cents": str(STANDARD_PRICE_IN_CENTS),
-            "user_access": STANDARD_USER_ACCESS,
+            "name":           TestProductStandardValues.name,
+            "price_in_cents": str(TestProductStandardValues.price_in_cents),
+            "user_access":    TestProductStandardValues.user_access,
         },
     )
 
@@ -132,9 +126,9 @@ async def test_2_create_product_router(async_client: AsyncClient) -> None:
     response = await async_client.post(
         url="/product/",
         json={
-            "name": WRONG_NAME,
-            "price_in_cents": str(STANDARD_PRICE_IN_CENTS),
-            "user_access": STANDARD_USER_ACCESS,
+            "name":           TestProductStandardValues.wrong_type_name,
+            "price_in_cents": str(TestProductStandardValues.price_in_cents),
+            "user_access":    TestProductStandardValues.user_access,
         },
     )
 
@@ -146,9 +140,9 @@ async def test_3_create_product_router(async_client: AsyncClient) -> None:
     response = await async_client.post(
         url="/product/",
         json={
-            "name": STANDARD_NAME,
-            "price_in_cents": WRONG_PRICE_IN_CENTS,
-            "user_access": STANDARD_USER_ACCESS,
+            "name":           TestProductStandardValues.name,
+            "price_in_cents": TestProductStandardValues.wrong_type_price_in_cents,
+            "user_access":    TestProductStandardValues.user_access,
         },
     )
 
@@ -160,9 +154,9 @@ async def test_4_create_product_router(async_client: AsyncClient) -> None:
     response = await async_client.post(
         url="/product/",
         json={
-            "name": STANDARD_NAME,
-            "price_in_cents": str(STANDARD_PRICE_IN_CENTS),
-            "user_access": WRONG_USER_ACCESS,
+            "name":           TestProductStandardValues.name,
+            "price_in_cents": str(TestProductStandardValues.price_in_cents),
+            "user_access":    TestProductStandardValues.wrong_type_user_access,
         },
     )
 
@@ -172,16 +166,19 @@ async def test_4_create_product_router(async_client: AsyncClient) -> None:
 async def test_1_update_product_router(async_client: AsyncClient) -> None:
     """PATCH /product/{id} returns 404 with the expected payload for a non-existent id."""
     response = await async_client.patch(
-        url=f"/product/{NONEXISTENT_ID}",
+        url=f"/product/{TestProductStandardValues.nonexistent_id}",
         json={
-            "name": STANDARD_NAME,
-            "price_in_cents": str(STANDARD_PRICE_IN_CENTS),
-            "user_access": STANDARD_USER_ACCESS,
+            "name":           TestProductStandardValues.updated_name,
+            "price_in_cents": str(TestProductStandardValues.updated_price_in_cents),
+            "user_access":    TestProductStandardValues.updated_user_access,
         },
     )
 
     assert response.status_code == HTTPStatus.NOT_FOUND
-    await assert_product_not_found_from_dict(NONEXISTENT_ID, response.json())
+    await assert_product_not_found_from_dict(
+        TestProductStandardValues.nonexistent_id,
+        response.json(),
+    )
 
 
 async def test_2_update_product_router(
@@ -192,9 +189,9 @@ async def test_2_update_product_router(
     response = await async_client.patch(
         url=f"/product/{standard_product.id}",
         json={
-            "name": WRONG_NAME,
-            "price_in_cents": str(STANDARD_PRICE_IN_CENTS),
-            "user_access": STANDARD_USER_ACCESS,
+            "name":           TestProductStandardValues.wrong_type_name,
+            "price_in_cents": str(TestProductStandardValues.updated_price_in_cents),
+            "user_access":    TestProductStandardValues.updated_user_access,
         },
     )
 
@@ -209,9 +206,9 @@ async def test_3_update_product_router(
     response = await async_client.patch(
         url=f"/product/{standard_product.id}",
         json={
-            "name": STANDARD_NAME,
-            "price_in_cents": WRONG_PRICE_IN_CENTS,
-            "user_access": STANDARD_USER_ACCESS,
+            "name":           TestProductStandardValues.updated_name,
+            "price_in_cents": TestProductStandardValues.wrong_type_price_in_cents,
+            "user_access":    TestProductStandardValues.updated_user_access,
         },
     )
 
@@ -226,9 +223,9 @@ async def test_4_update_product_router(
     response = await async_client.patch(
         url=f"/product/{standard_product.id}",
         json={
-            "name": STANDARD_NAME,
-            "price_in_cents": str(STANDARD_PRICE_IN_CENTS),
-            "user_access": WRONG_USER_ACCESS,
+            "name":           TestProductStandardValues.updated_name,
+            "price_in_cents": str(TestProductStandardValues.updated_price_in_cents),
+            "user_access":    TestProductStandardValues.wrong_type_user_access,
         },
     )
 
@@ -240,32 +237,31 @@ async def test_5_update_product_router(
         standard_product: ProductModel,
 ) -> None:
     """PATCH /product/{id} returns 200 and persists the updated fields correctly."""
-    updated_name = STANDARD_NAME + "_updated"
-    updated_price_in_cents = STANDARD_PRICE_IN_CENTS + Decimal("10")
-    updated_user_access = UserAccessEnum.LOW
-
     response = await async_client.patch(
         url=f"/product/{standard_product.id}",
         json={
-            "name": updated_name,
-            "price_in_cents": str(updated_price_in_cents),
-            "user_access": updated_user_access,
+            "name":           TestProductStandardValues.updated_name,
+            "price_in_cents": str(TestProductStandardValues.updated_price_in_cents),
+            "user_access":    TestProductStandardValues.updated_user_access,
         },
     )
     updated_product = response.json()
 
     assert response.status_code == HTTPStatus.OK
-    assert updated_product["name"] == updated_name
-    assert Decimal(str(updated_product["price_in_cents"])) == updated_price_in_cents
-    assert updated_product["user_access"] == updated_user_access
+    assert updated_product["name"] == TestProductStandardValues.updated_name
+    assert Decimal(str(updated_product["price_in_cents"])) == TestProductStandardValues.updated_price_in_cents
+    assert updated_product["user_access"] == TestProductStandardValues.updated_user_access
 
 
 async def test_1_delete_product_router(async_client: AsyncClient) -> None:
     """DELETE /product/{id} returns 404 with the expected payload for a non-existent id."""
-    response = await async_client.delete(url=f"/product/{NONEXISTENT_ID}")
+    response = await async_client.delete(url=f"/product/{TestProductStandardValues.nonexistent_id}")
 
     assert response.status_code == HTTPStatus.NOT_FOUND
-    await assert_product_not_found_from_dict(NONEXISTENT_ID, response.json())
+    await assert_product_not_found_from_dict(
+        TestProductStandardValues.nonexistent_id,
+        response.json(),
+    )
 
 
 async def test_2_delete_product_router(

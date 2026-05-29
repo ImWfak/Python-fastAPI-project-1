@@ -3,6 +3,7 @@
 
 #ENV
 *.env
+!.example.env
 
 #Cahse
 *.py[cod]

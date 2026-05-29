@@ -1,20 +1,16 @@
 import pytest_asyncio
 
-from auth.auth_service import hash_password_service
+from auth.password_service import hash_password_service
+from test_config import TestUserStandardValues
 from user.user_model import UserModel
-from user_constants import (
-    STANDARD_USERNAME,
-    STANDARD_PASSWORD,
-    STANDARD_USER_ACCESS
-)
 
 
 @pytest_asyncio.fixture
 async def standard_user() -> UserModel:
-    hashed_standard_password = await hash_password_service(STANDARD_PASSWORD)
+    hashed_standard_password = await hash_password_service(TestUserStandardValues.password)
 
     return await UserModel.create(
-        username=STANDARD_USERNAME,
+        username=TestUserStandardValues.username,
         password=hashed_standard_password,
-        user_access=STANDARD_USER_ACCESS
+        user_access=TestUserStandardValues.user_access,
     )
