@@ -6,14 +6,14 @@ from auth.auth_service import verify_password_service
 from exception.app_exception import AppException
 from exception.exeption_source_enum import ExceptionSourceEnum
 from user.user_model import UserModel
-from test_config import TestUserStandardValues
+from test_config import UserStandardValues
 
 
 async def assert_standard_user(user: UserModel) -> None:
     """Asserts that a user matches the standard test fixtures."""
-    assert user.username == TestUserStandardValues.username
-    assert await verify_password_service(TestUserStandardValues.password, user.password)
-    assert user.user_access == TestUserStandardValues.user_access
+    assert user.username == UserStandardValues.username
+    assert await verify_password_service(UserStandardValues.password, user.password)
+    assert user.user_access == UserStandardValues.user_access
 
 
 async def assert_user_not_found_by_id(

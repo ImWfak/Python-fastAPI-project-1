@@ -1,7 +1,7 @@
 import pytest_asyncio
 
 from product.product_model import ProductModel
-from test_config import TestProductStandardValues
+from test_config import ProductStandardValues
 
 
 @pytest_asyncio.fixture
@@ -12,7 +12,7 @@ async def standard_product() -> ProductModel:
     :returns: The newly created :class:`ProductModel` instance.
     """
     return await ProductModel.create(
-        name=TestProductStandardValues.name,
-        price_in_cents=TestProductStandardValues.price_in_cents,
-        user_access=TestProductStandardValues.user_access,
+        name=ProductStandardValues.name,
+        price_in_cents=ProductStandardValues.price_in_cents,
+        user_access=ProductStandardValues.user_access,
     )

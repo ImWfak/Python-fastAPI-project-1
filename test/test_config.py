@@ -7,33 +7,33 @@ from pydantic.v1 import BaseSettings, Field
 from user.user_access_enum import UserAccessEnum
 
 
-class TestDBSettings(BaseSettings):
-    host: str = Field(alias="HOST")
-    port: int = Field(alias="PORT")
-    user: str = Field(alias="UESR")
-    password: str = Field(alias="PASSWORD")
-    database: str = Field(alias="DATABASE")
+class DBSettings(BaseSettings):
+    host: str = Field(validation_alias="HOST")
+    port: int = Field(validation_alias="PORT")
+    user: str = Field(validation_alias="UESR")
+    password: str = Field(validation_alias="PASSWORD")
+    database: str = Field(validation_alias="DATABASE")
 
     class Config:
         env_file = ".test.env"
 
 
-class TestTokenSettings(BaseSettings):
-    secret_key: str = Field(alias="SECRET_KEY")
-    access_token_expire_minutes: int = Field(alias="ACCESS_TOKEN_EXPIRE_MINUTES")
-    jwt_algorithm: str = Field(alias="JWT_ALGORITHM")
+class TokenSettings(BaseSettings):
+    secret_key: str = Field(validation_alias="SECRET_KEY")
+    access_token_expire_minutes: int = Field(validation_alias="ACCESS_TOKEN_EXPIRE_MINUTES")
+    jwt_algorithm: str = Field(validation_alias="JWT_ALGORITHM")
 
     class Config:
         env_file = ".test.env"
 
 
 @dataclass(frozen=True)
-class AbstractTestValues(ABC):
+class AbstractValues(ABC):
     nonexistent_id = -1
 
 
 @dataclass(frozen=True)
-class TestUserStandardValues(AbstractTestValues):
+class UserStandardValues(AbstractValues):
     nonexistent_username: str = ""
 
     username = "test username"
@@ -50,7 +50,7 @@ class TestUserStandardValues(AbstractTestValues):
 
 
 @dataclass(frozen=True)
-class TestProductStandardValues(AbstractTestValues):
+class ProductStandardValues(AbstractValues):
     name = "test name"
     price_in_cents = Decimal(1)
     user_access = UserAccessEnum.MIDDLE
@@ -65,7 +65,7 @@ class TestProductStandardValues(AbstractTestValues):
 
 
 @dataclass(frozen=True)
-class TestValidationRegexes:
+class ValidationRegexes:
     pydantic_base_url = r"https://errors\.pydantic\.dev/2\.12\/v"
 
     string_type_pattern = (

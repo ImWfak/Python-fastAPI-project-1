@@ -6,21 +6,21 @@ from _pytest._code import ExceptionInfo
 from exception.app_exception import AppException
 from exception.exeption_source_enum import ExceptionSourceEnum
 from product.product_model import ProductModel
-from test_config import TestProductStandardValues
+from test_config import ProductStandardValues
 
 
 async def assert_standard_product(product: ProductModel) -> None:
     """Asserts that a product matches the standard test fixtures."""
-    assert product.name == TestProductStandardValues.name
-    assert product.price_in_cents == TestProductStandardValues.price_in_cents
-    assert product.user_access == TestProductStandardValues.user_access
+    assert product.name == ProductStandardValues.name
+    assert product.price_in_cents == ProductStandardValues.price_in_cents
+    assert product.user_access == ProductStandardValues.user_access
 
 
 async def assert_standard_product_from_dict(product_dict: dict) -> None:
     """Asserts that a product dictionary matches the standard test fixtures."""
-    assert product_dict.get("name") == TestProductStandardValues.name
-    assert Decimal(str(product_dict.get("price_in_cents"))) == TestProductStandardValues.price_in_cents
-    assert product_dict.get("user_access") == TestProductStandardValues.user_access
+    assert product_dict.get("name") == ProductStandardValues.name
+    assert Decimal(str(product_dict.get("price_in_cents"))) == ProductStandardValues.price_in_cents
+    assert product_dict.get("user_access") == ProductStandardValues.user_access
 
 
 async def assert_product_not_found(
@@ -51,7 +51,7 @@ async def assert_product_wrong_name(response: any) -> None:
     assert error["type"] == "string_type"
     assert error["loc"] == ["body", "name"]
     assert error["msg"] == "Input should be a valid string"
-    assert error["input"] == TestProductStandardValues.wrong_type_name
+    assert error["input"] == ProductStandardValues.wrong_type_name
 
 
 async def assert_product_wrong_price_in_cents(response: any) -> None:
@@ -62,7 +62,7 @@ async def assert_product_wrong_price_in_cents(response: any) -> None:
     assert error["type"] == "decimal_parsing"
     assert error["loc"] == ["body", "price_in_cents"]
     assert error["msg"] == "Input should be a valid decimal"
-    assert error["input"] == TestProductStandardValues.wrong_type_price_in_cents
+    assert error["input"] == ProductStandardValues.wrong_type_price_in_cents
 
 
 async def assert_product_wrong_user_access(response: any) -> None:
@@ -73,4 +73,4 @@ async def assert_product_wrong_user_access(response: any) -> None:
     assert error["type"] == "enum"
     assert error["loc"] == ["body", "user_access"]
     assert error["msg"] == "Input should be 'HIGH', 'MIDDLE' or 'LOW'"
-    assert error["input"] == TestProductStandardValues.wrong_type_user_access
+    assert error["input"] == ProductStandardValues.wrong_type_user_access
